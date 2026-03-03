@@ -24,6 +24,41 @@ with st.sidebar:
     uploaded_file = st.file_uploader("Upload Raw Data (CSV or Excel)", type=['csv', 'xlsx'])
     
     st.divider()
+# --- MODUL SIDEBAR: DOWNLOAD SAMPLE DATA ---
+# Letakkan ini tepat di bawah st.divider() yang ada di dalam 'with st.sidebar:'
+
+    st.subheader("1. Sample for Testing")
+    
+    # Generate 1,500 data untuk simulasi audit skala besar
+    @st.cache_data
+    def generate_large_sample():
+        np.random.seed(42)
+        data_sample = {
+            'Date': pd.date_range(start='2025-01-01', periods=1500, freq='H'),
+            'Vendor': np.random.choice(['Alpha Tech', 'Beta Corp', 'Global Solutions', 'Delta Industry', 'Indo Prima'], 1500),
+            'Amount': np.random.uniform(1000000, 100000000, 1500).round(2),
+            'Description': np.random.choice(['Service Fee', 'Procurement', 'Maintenance', 'Operational'], 1500)
+        }
+        return pd.DataFrame(data_sample)
+
+    sample_df = generate_large_sample()
+    
+    # Fungsi konversi ke CSV
+    def convert_df_to_csv(df_to_convert):
+        return df_to_convert.to_csv(index=False).encode('utf-8')
+
+    st.download_button(
+        label="📥 Download 1,500 Rows Sample (CSV)",
+        data=convert_df_to_csv(sample_df),
+        file_name="audit_sample_saiduhuud.csv",
+        mime="text/csv",
+    )
+    st.caption("Gunakan file ini untuk mencoba fitur deteksi anomali.")
+    
+    st.divider()
+    st.subheader("2. Dashboard Settings")
+    # Bagian slider risk_threshold tetap berada di bawah sini
+    
     risk_threshold = st.slider("Select Risk Threshold (%)", 0, 100, 70)
     st.caption("Transactions above this score will be flagged as High Risk.")
 
@@ -104,3 +139,4 @@ st.download_button(
 )
 
 st.sidebar.success("App Status: Ready for Audit")
+
