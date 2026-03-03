@@ -69,4 +69,91 @@ with st.sidebar:
     st.caption("No data? Download this sample to test the app")
     
     st.divider()
-    st
+    st.subheader("2. Upload & Settings")
+    uploaded_file = st.file_uploader("Upload Raw Data (CSV or Excel)", type=['csv', 'xlsx'])
+    
+    risk_threshold = st.slider("Select Risk Threshold (%)", 0, 100, 70)
+    st.caption("Transactions above this score will be flagged as High Risk.")
+
+# --- MOCK DATA GENERATOR ---
+def load_data(file):
+    if file is not None:
+        if file.name.endswith('.csv'):
+            return pd.read_csv(file)
+        else:
+            return pd.read_excel(file)
+    else:
+        # Data dummy untuk demonstrasi awal (200 baris sesuai pondasi awal)
+        data = {
+            'Date': pd.date_range(start='2024-01-01', periods=200, freq='D'),
+            'Vendor': np.random.choice(['Vendor A', 'Vendor B', 'Vendor C', 'Global Corp', 'Indo Jaya'], 200),
+            'Amount': np.random.uniform(1000, 50000, 200).round(2),
+            'Description': 'Purchase Order'
+        }
+        return pd.DataFrame(data)
+
+df = load_data(uploaded_file)
+
+# --- AUDIT LOGIC ---
+df['Risk_Score'] = (df['Amount'] / df['Amount'].max() * 100).round(2)
+df['Is_Round'] = df['Amount'].apply(lambda x: 1 if x % 100 == 0 else 0)
+df['Final_Score'] = (df['Risk_Score'] + (df['Is_Round'] * 20)).clip(0, 100)
+
+anomalies = df[df['Final_Score'] >= risk_threshold]
+
+# --- DASHBOARD UI ---
+st.title("🛡️ Audit Intelligence & Risk Dashboard")
+st.markdown("Transforming raw transactions into actionable audit insights.")
+st.warning("👈 **Mobile Users: Open the sidebar menu (arrow icon) to upload data and adjust threshold.**")
+
+# Row 1: Key Metrics
+col1, col2, col3, col4 = st.columns(4)
+col1.metric("Total Transactions", len(df))
+col2.metric("Detected Anomalies", len(anomalies), delta=f"{len(anomalies)/len(df)*100:.1f}%", delta_color="inverse")
+col3.metric("Total Amount Analyzed", f"${df['Amount'].sum():,.0f}")
+col4.metric("Avg Risk Score", f"{df['Final_Score'].mean():,.1f}")
+
+st.divider()
+
+# Row 2: Visualizations
+c1, c2 = st.columns([6, 4])
+
+with c1:
+    st.subheader("Transaction Risk Distribution")
+    fig = px.scatter(df, x="Date", y="Amount", color="Final_Score", 
+                     size="Amount", color_continuous_scale='RdYlGn_r',
+                     title="Visualizing Risks over Time")
+    st.plotly_chart(fig, use_container_width=True)
+
+with c2:
+    st.subheader("Risk Category Breakdown")
+    risk_counts = pd.cut(df['Final_Score'], bins=[0, 40, 70, 100], labels=['Low', 'Medium', 'High']).value_counts()
+    fig_pie = px.pie(values=risk_counts.values, names=risk_counts.index, 
+                     color=risk_counts.index, color_discrete_map={'High':'#ef553b', 'Medium':'#fecb52', 'Low':'#00cc96'})
+    st.plotly_chart(fig_pie, use_container_width=True)
+
+# Row 3: Data Table
+st.subheader("🚩 Anomaly Investigation List")
+st.dataframe(anomalies.sort_values(by='Final_Score', ascending=False), use_container_width=True)
+
+# --- EXPORT TO EXCEL ---
+def to_excel(df_export):
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df_export.to_excel(writer, index=False, sheet_name='Audit_Report')
+        # Kerapian tambahan untuk hasil export
+        workbook  = writer.book
+        worksheet = writer.sheets['Audit_Report']
+        header_fmt = workbook.add_format({'bold': True, 'fg_color': '#1F4E78', 'font_color': 'white'})
+        for col_num, value in enumerate(df_export.columns.values):
+            worksheet.write(0, col_num, value, header_fmt)
+    return output.getvalue()
+
+st.download_button(
+    label="📥 Download Audit Report (Excel)",
+    data=to_excel(anomalies),
+    file_name="Audit_Anomaly_Report_saidUhuud.xlsx",
+    mime="application/vnd.ms-excel"
+)
+
+st.sidebar.success("App Status: Ready for Audit")
