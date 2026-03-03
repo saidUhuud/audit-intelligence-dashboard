@@ -27,7 +27,7 @@ with st.sidebar:
 st.subheader("1. Data Sample")
 
     # Generate 1,500 data untuk simulasi audit skala besar
-    @st.cache_data
+@st.cache_data
     def generate_large_sample():
         np.random.seed(42)
         data_sample = {
@@ -161,6 +161,7 @@ st.download_button(
 )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
 
 
