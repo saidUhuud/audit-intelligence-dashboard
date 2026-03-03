@@ -24,51 +24,46 @@ with st.sidebar:
     uploaded_file = st.file_uploader("Upload Raw Data (CSV or Excel)", type=['csv', 'xlsx'])
     
     st.divider()
-st.subheader("1. Data Sample")
+# --- POTONGAN PERBAIKAN (PASTE DI DALAM 'WITH ST.SIDEBAR:') ---
 
-    # Generate 1,500 data untuk simulasi audit skala besar
-@st.cache_data
-     def generate_large_sample():
+    st.subheader("1. Data Sample")
+
+    # Pastikan bagian ini lurus dengan st.subheader di atasnya
+    @st.cache_data
+    def generate_large_sample():
         np.random.seed(42)
         data_sample = {
             'Date': pd.date_range(start='2025-01-01', periods=1500, freq='H'),
             'Vendor': np.random.choice(['Alpha Tech', 'Beta Corp', 'Global Solutions', 'Delta Industry', 'Indo Prima'], 1500),
             'Amount': np.random.uniform(1000000, 100000000, 1500).round(2),
             'Description': np.random.choice(['Service Fee', 'Procurement', 'Maintenance', 'Operational'], 1500)
-        }   
+        }
         return pd.DataFrame(data_sample)
 
     sample_df = generate_large_sample()
 
-    # Fungsi untuk membuat file Excel yang rapi (xlsxwriter)
     def get_xlsx_sample(df_sample):
         output = BytesIO()
         with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
             df_sample.to_excel(writer, index=False, sheet_name='Audit_Sample')
             workbook  = writer.book
             worksheet = writer.sheets['Audit_Sample']
-            
-            # Format Header: Tebal, Latar Biru Tua, Teks Putih
             header_format = workbook.add_format({
                 'bold': True, 'text_wrap': True, 'valign': 'vcenter',
                 'align': 'center', 'fg_color': '#1F4E78', 'font_color': 'white', 'border': 1
             })
-            
-            # Format Angka & Border
             currency_format = workbook.add_format({'num_format': '#,##0.00', 'border': 1})
             border_format = workbook.add_format({'border': 1})
 
             for col_num, value in enumerate(df_sample.columns.values):
                 worksheet.write(0, col_num, value, header_format)
                 column_len = max(df_sample[value].astype(str).map(len).max(), len(value)) + 3
-                
                 if value == 'Amount':
                     worksheet.set_column(col_num, col_num, column_len, currency_format)
                 else:
                     worksheet.set_column(col_num, col_num, column_len, border_format)
         return output.getvalue()
 
-    # Tombol Download Excel
     st.download_button(
         label="📥 Download 1,500 Rows Sample (Excel)",
         data=get_xlsx_sample(sample_df),
@@ -76,14 +71,6 @@ st.subheader("1. Data Sample")
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
     st.caption("No data? Download this sample to test the app")
-    
-    st.divider()
-    st.subheader("2. Dashboard Settings")
-    
-    risk_threshold = st.slider("Select Risk Threshold (%)", 0, 100, 70)
-    st.caption("Transactions above this score will be flagged as High Risk.")
-
-# --- MOCK DATA GENERATOR (Jika user belum upload file) ---
 # --- MOCK DATA GENERATOR (Jika user belum upload file) ---
 def load_data(file):
     if file is not None:
@@ -161,6 +148,7 @@ st.download_button(
 )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
 
 
