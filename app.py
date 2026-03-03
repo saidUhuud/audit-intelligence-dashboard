@@ -22,6 +22,11 @@ with st.sidebar:
     st.info("Developed by: saidUhuud")
     
     uploaded_file = st.file_uploader("Upload Raw Data (CSV or Excel)", type=['csv', 'xlsx'])
+    
+    st.divider()
+    risk_threshold = st.slider("Select Risk Threshold (%)", 0, 100, 70)
+    st.caption("Transactions above this score will be flagged as High Risk.")
+    
     # Fitur Download Sample Data
     sample_data = pd.DataFrame({
         'Date': pd.date_range(start='2024-01-01', periods=50),
@@ -73,43 +78,11 @@ if df is not None:
     df['Is_Round'] = df['Amount'].apply(lambda x: 1 if x % 1000 == 0 else 0)
     df['Final_Score'] = (df['Risk_Score'] + (df['Is_Round'] * 15)).clip(0, 100)
 
-    # Filter Anomali
-    
-    st.divider()
-    risk_threshold = st.slider("Select Risk Threshold (%)", 0, 100, 70)
-    st.caption("Transactions above this score will be flagged as High Risk.")
-
-# --- MOCK DATA GENERATOR (Jika user belum upload file) ---
-def load_data(file):
-    if file is not None:
-        if file.name.endswith('.csv'):
-            return pd.read_csv(file)
-        else:
-            return pd.read_excel(file)
-    else:
-        # Data dummy untuk demonstrasi awal
-        data = {
-            'Date': pd.date_range(start='2024-01-01', periods=200, freq='D'),
-            'Vendor': np.random.choice(['Vendor A', 'Vendor B', 'Vendor C', 'Global Corp', 'Indo Jaya'], 200),
-            'Amount': np.random.uniform(1000, 50000, 200).round(2),
-            'Description': 'Purchase Order'
-        }
-        return pd.DataFrame(data)
-
-df = load_data(uploaded_file)
-
-# --- AUDIT LOGIC (Postingan 8 Integration) ---
-# Menghitung Risk Score sederhana: Berdasarkan nilai transaksi dan angka bulat (Round Number)
-df['Risk_Score'] = (df['Amount'] / df['Amount'].max() * 100).round(2)
-df['Is_Round'] = df['Amount'].apply(lambda x: 1 if x % 100 == 0 else 0)
-df['Final_Score'] = (df['Risk_Score'] + (df['Is_Round'] * 20)).clip(0, 100)
-
 # Filter Anomali
 anomalies = df[df['Final_Score'] >= risk_threshold]
 
 # --- DASHBOARD UI (Postingan 9 Integration) ---
 st.title("🛡️ Audit Intelligence & Risk Dashboard")
-st.warning("👈 *Please Open the menu in the top left corner (arrow icon) to Upload Data or set the Threshold for mobile users**")
 st.markdown("Transforming raw transactions into actionable audit insights.")
 
 # Row 1: Key Metrics
@@ -157,6 +130,3 @@ st.download_button(
 )
 
 st.sidebar.success("App Status: Ready for Audit")
-
-
-
