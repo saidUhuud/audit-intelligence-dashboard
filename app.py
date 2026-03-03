@@ -22,6 +22,58 @@ with st.sidebar:
     st.info("Developed by: saidUhuud")
     
     uploaded_file = st.file_uploader("Upload Raw Data (CSV or Excel)", type=['csv', 'xlsx'])
+# Fitur Download Sample Data
+    sample_data = pd.DataFrame({
+        'Date': pd.date_range(start='2024-01-01', periods=50),
+        'Vendor': np.random.choice(['Vendor A', 'Vendor B', 'Global Corp', 'Indo Jaya'], 50),
+        'Amount': [1000, 5000, 15000, 200, 45000, 100000, 300, 1250, 400, 10000] * 5,
+        'Description': 'Regular Payment'
+    })
+    
+    def convert_df(df):
+        return df.to_csv(index=False).encode('utf-8')
+
+    st.download_button(
+        label="📥 Download Sample Data CSV",
+        data=convert_df(sample_data),
+        file_name="audit_sample_data.csv",
+        mime="text/csv",
+    )
+    st.caption("No data? Download this sample to test the app.")
+    
+    st.divider()
+    st.subheader("2. Upload & Analysis")
+    uploaded_file = st.file_uploader("Upload Raw Data (CSV or Excel)", type=['csv', 'xlsx'])
+    
+    risk_threshold = st.slider("Set Risk Threshold (%)", 0, 100, 70)
+    st.caption("Scores above this will be flagged for investigation.")
+
+# --- DATA LOADING ---
+def load_data(file):
+    if file is not None:
+        try:
+            if file.name.endswith('.csv'):
+                return pd.read_csv(file)
+            else:
+                return pd.read_excel(file)
+        except Exception as e:
+            st.error(f"Error loading file: {e}")
+            return None
+    else:
+        # Tampilan awal menggunakan data sample
+        return sample_data
+
+df = load_data(uploaded_file)
+
+if df is not None:
+    # --- AUDIT LOGIC (Postingan 8) ---
+    # Logika deteksi risiko sederhana
+    max_val = df['Amount'].max() if df['Amount'].max() > 0 else 1
+    df['Risk_Score'] = (df['Amount'] / max_val * 100).round(2)
+    df['Is_Round'] = df['Amount'].apply(lambda x: 1 if x % 1000 == 0 else 0)
+    df['Final_Score'] = (df['Risk_Score'] + (df['Is_Round'] * 15)).clip(0, 100)
+
+    # Filter Anomali
     
     st.divider()
     risk_threshold = st.slider("Select Risk Threshold (%)", 0, 100, 70)
@@ -105,4 +157,5 @@ st.download_button(
 )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
