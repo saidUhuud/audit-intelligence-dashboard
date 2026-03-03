@@ -19,9 +19,7 @@ st.markdown("""
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/3201/3201521.png", width=100)
     st.title("Audit Control Panel")
-    st.info("Developed by: saidUhuud 
-    
-            Quantitative Developer & Statistical Consultant")
+    st.info("Developed by: saidUhuud")
     
     st.divider()
     st.subheader("1. Data Sample")
@@ -159,4 +157,5 @@ st.download_button(
 )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
