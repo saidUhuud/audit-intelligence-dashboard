@@ -22,7 +22,7 @@ with st.sidebar:
     st.info("Developed by: saidUhuud")
     
     uploaded_file = st.file_uploader("Upload Raw Data (CSV or Excel)", type=['csv', 'xlsx'])
-# Fitur Download Sample Data
+    # Fitur Download Sample Data
     sample_data = pd.DataFrame({
         'Date': pd.date_range(start='2024-01-01', periods=50),
         'Vendor': np.random.choice(['Vendor A', 'Vendor B', 'Global Corp', 'Indo Jaya'], 50),
@@ -157,5 +157,6 @@ st.download_button(
 )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
 
