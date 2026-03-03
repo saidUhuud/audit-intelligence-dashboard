@@ -24,11 +24,12 @@ with st.sidebar:
     uploaded_file = st.file_uploader("Upload Raw Data (CSV or Excel)", type=['csv', 'xlsx'])
     
     st.divider()
-# --- POTONGAN PERBAIKAN (PASTE DI DALAM 'WITH ST.SIDEBAR:') ---
+# --- MODUL SIDEBAR: DOWNLOAD SAMPLE DATA ---
+# Letakkan ini tepat di bawah st.divider() yang ada di dalam 'with st.sidebar:'
 
-    st.subheader("1. Data Sample")
-
-    # Pastikan bagian ini lurus dengan st.subheader di atasnya
+    st.subheader("1. Sample for Testing")
+    
+    # Generate 1,500 data untuk simulasi audit skala besar
     @st.cache_data
     def generate_large_sample():
         np.random.seed(42)
@@ -41,36 +42,22 @@ with st.sidebar:
         return pd.DataFrame(data_sample)
 
     sample_df = generate_large_sample()
-
-    def get_xlsx_sample(df_sample):
-        output = BytesIO()
-        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-            df_sample.to_excel(writer, index=False, sheet_name='Audit_Sample')
-            workbook  = writer.book
-            worksheet = writer.sheets['Audit_Sample']
-            header_format = workbook.add_format({
-                'bold': True, 'text_wrap': True, 'valign': 'vcenter',
-                'align': 'center', 'fg_color': '#1F4E78', 'font_color': 'white', 'border': 1
-            })
-            currency_format = workbook.add_format({'num_format': '#,##0.00', 'border': 1})
-            border_format = workbook.add_format({'border': 1})
-
-            for col_num, value in enumerate(df_sample.columns.values):
-                worksheet.write(0, col_num, value, header_format)
-                column_len = max(df_sample[value].astype(str).map(len).max(), len(value)) + 3
-                if value == 'Amount':
-                    worksheet.set_column(col_num, col_num, column_len, currency_format)
-                else:
-                    worksheet.set_column(col_num, col_num, column_len, border_format)
-        return output.getvalue()
+    
+    # Fungsi konversi ke CSV
+    def convert_df_to_csv(df_to_convert):
+        return df_to_convert.to_csv(index=False).encode('utf-8')
 
     st.download_button(
-        label="📥 Download 1,500 Rows Sample (Excel)",
-        data=get_xlsx_sample(sample_df),
-        file_name="audit_sample_saiduhuud.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        label="📥 Download 1,500 Rows Sample (CSV)",
+        data=convert_df_to_csv(sample_df),
+        file_name="audit_sample_saiduhuud.csv",
+        mime="text/csv",
     )
-    st.caption("No data? Download this sample to test the app")
+    st.caption("Gunakan file ini untuk mencoba fitur deteksi anomali.")
+    
+    st.divider()
+    st.subheader("2. Dashboard Settings")
+    # Bagian slider risk_threshold tetap berada di bawah sini
 # --- MOCK DATA GENERATOR (Jika user belum upload file) ---
 def load_data(file):
     if file is not None:
@@ -148,6 +135,7 @@ st.download_button(
 )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
 
 
