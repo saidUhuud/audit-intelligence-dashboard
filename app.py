@@ -57,6 +57,7 @@ anomalies = df[df['Final_Score'] >= risk_threshold]
 
 # --- DASHBOARD UI (Postingan 9 Integration) ---
 st.title("🛡️ Audit Intelligence & Risk Dashboard")
+st.write("👈 **Open the sidebar menu (top left) to upload your data and adjust risk levels!**")
 st.markdown("Transforming raw transactions into actionable audit insights.")
 
 # Row 1: Key Metrics
@@ -102,5 +103,6 @@ st.download_button(
     file_name="Audit_Anomaly_Report_saidUhuud.xlsx",
     mime="application/vnd.ms-excel"
 )
+
 
 st.sidebar.success("App Status: Ready for Audit")
