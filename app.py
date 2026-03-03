@@ -28,14 +28,14 @@ st.subheader("1. Data Sample")
 
     # Generate 1,500 data untuk simulasi audit skala besar
 @st.cache_data
-    def generate_large_sample():
+     def generate_large_sample():
         np.random.seed(42)
         data_sample = {
             'Date': pd.date_range(start='2025-01-01', periods=1500, freq='H'),
             'Vendor': np.random.choice(['Alpha Tech', 'Beta Corp', 'Global Solutions', 'Delta Industry', 'Indo Prima'], 1500),
             'Amount': np.random.uniform(1000000, 100000000, 1500).round(2),
             'Description': np.random.choice(['Service Fee', 'Procurement', 'Maintenance', 'Operational'], 1500)
-        }
+        }   
         return pd.DataFrame(data_sample)
 
     sample_df = generate_large_sample()
@@ -161,6 +161,7 @@ st.download_button(
 )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
 
 
