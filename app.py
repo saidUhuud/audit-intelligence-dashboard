@@ -4,10 +4,10 @@ import numpy as np
 import plotly.express as px
 from io import BytesIO
 
-# --- CONFIGURATION ---
+# --- CONFIG & BRANDING ---
 st.set_page_config(page_title="saidUhuud | Quantitative Developer", layout="wide")
 
-# Custom CSS untuk tampilan premium
+# Styling Dashboard
 st.markdown("""
     <style>
     .main { background-color: #f8f9fa; }
@@ -16,19 +16,6 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- GENERATE DATA AWAL (500 BARIS) ---
-@st.cache_data
-def generate_initial_data():
-    np.random.seed(42)
-    return pd.DataFrame({
-        'Date': pd.date_range(start='2025-01-01', periods=500),
-        'Vendor_Name': np.random.choice(['Alpha Corp', 'Beta Ltd', 'Gamma Inc', 'Delta Co'], 500),
-        'Amount': np.random.uniform(5000, 50000, 500).round(2),
-        'Description': 'Initial Audit Sample'
-    })
-
-initial_df = generate_initial_data()
-
 # --- SIDEBAR ---
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/3201/3201521.png", width=80)
@@ -36,87 +23,106 @@ with st.sidebar:
     st.info("Developed by: **saidUhuud**\n\n*Quantitative Developer | Statistical Consultant*")
     
     st.divider()
-    st.subheader("1. Sample for Testing")
-    # Sampel 1.500 data untuk diunduh audiens
-    sample_dl = pd.DataFrame({
-        'Tanggal': pd.date_range(start='2025-01-01', periods=1500, freq='H'),
-        'Vendor': np.random.choice(['Supplier A', 'Supplier B', 'Supplier C'], 1500),
-        'Total_Nilai': np.random.uniform(1000000, 100000000, 1500).round(2)
+    st.subheader("1. Download Sample")
+    # Sample 1500 baris untuk dicoba orang lain
+    sample_data = pd.DataFrame({
+        'Transaction_ID': [f'SMP-{i:04d}' for i in range(1, 1501)],
+        'Date': pd.date_range(start='2025-01-01', periods=1500, freq='H'),
+        'Vendor_Name': np.random.choice(['Supplier A', 'Supplier B', 'Supplier C'], 1500),
+        'Amount': np.random.uniform(1000000, 100000000, 1500).round(2)
     })
-    st.download_button("📥 Download 1,500 Rows Sample", sample_dl.to_csv(index=False).encode('utf-8'), "audit_sample_1500.csv", "text/csv")
+    st.download_button("📥 Download 1,500 Rows Sample", sample_data.to_csv(index=False).encode('utf-8'), "audit_sample_1500.csv", "text/csv")
     
     st.divider()
-    st.subheader("2. Upload & Settings")
-    uploaded_file = st.file_uploader("Upload Data (CSV/Excel)", type=['csv', 'xlsx'])
-    risk_threshold = st.slider("Risk Threshold (%)", 0, 100, 75)
-
-# --- DATA PROCESSING ---
-df = initial_df
-target_col = "Amount"
-
-if uploaded_file:
-    # Membaca file yang diupload (baik CSV maupun Excel)
-    if uploaded_file.name.endswith('.csv'):
-        df = pd.read_csv(uploaded_file)
-    else:
-        df = pd.read_excel(uploaded_file)
+    st.subheader("2. Settings")
+    uploaded_file = st.file_uploader("Upload Data Anda", type=['csv', 'xlsx'])
     
-    # DINAMIS: Mencari kolom angka agar tidak error meski header beda
-    numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-    if numeric_cols:
-        # Default pilih kolom yang ada kata 'Amount' atau 'Nilai'
-        default_idx = 0
-        for i, col in enumerate(numeric_cols):
-            if any(x in col.lower() for x in ['amount', 'nilai', 'total', 'harga']):
-                default_idx = i
-                break
-        target_col = st.sidebar.selectbox("Pilih Kolom Nilai Uang:", numeric_cols, index=default_idx)
-    else:
-        st.error("File tidak memiliki kolom angka!")
+    # THRESHOLD: Remote control utama untuk real-time update
+    risk_threshold = st.slider("Set Risk Threshold (%)", 0, 100, 75)
 
-# Logika Risiko (Berdasarkan Nilai Tertinggi)
+# --- DATA ENGINE ---
+@st.cache_data
+def get_default_data():
+    # Munculkan 500 data awal agar dashboard tidak kosong
+    np.random.seed(42)
+    return pd.DataFrame({
+        'Date': pd.date_range(start='2025-01-01', periods=500),
+        'Vendor': np.random.choice(['Alpha Tech', 'Beta Corp', 'Gamma Inc'], 500),
+        'Amount': np.random.uniform(5000000, 50000000, 500).round(2)
+    })
+
+# Load data (Upload vs Default)
+if uploaded_file:
+    df = pd.read_csv(uploaded_file) if uploaded_file.name.endswith('.csv') else pd.read_excel(uploaded_file)
+else:
+    df = get_default_data()
+
+# LOGIKA DINAMIS HEADER (Cari kolom nominal uang secara otomatis)
+numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+target_col = "Amount" # default
+if numeric_cols:
+    for col in numeric_cols:
+        if any(x in col.lower() for x in ['amount', 'nilai', 'total', 'harga']):
+            target_col = col
+            break
+
+# --- REAL-TIME CALCULATION ---
+# Seluruh perhitungan di bawah ini akan bergerak SETIAP KALI slider digeser
 max_val = df[target_col].max() if df[target_col].max() > 0 else 1
 df['Risk_Score'] = (df[target_col] / max_val * 100).round(2)
+
+# Filter Anomali berdasarkan Slider
 anomalies = df[df['Risk_Score'] >= risk_threshold].copy()
 
-# --- MAIN DASHBOARD ---
+# --- UI DASHBOARD ---
 st.title("🛡️ Quantitative Audit Dashboard")
-st.warning("👈 **Mobile Users: Open the sidebar menu (top-left) to access controls.**")
+st.warning("👈 **Mobile Users: Open the sidebar menu (top-left) to access controls and adjust threshold.**")
 
-# Row 1: Metrics
+# 1. Metrics (Bergerak Real-Time)
 m1, m2, m3 = st.columns(3)
-m1.metric("Rows Analyzed", f"{len(df):,}")
-m2.metric("High Risk Anomalies", f"{len(anomalies):,}")
-m3.metric("Total Exposure", f"${df[target_col].sum():,.2f}")
+m1.metric("Transactions Analyzed", f"{len(df):,}")
+m2.metric("High Risk Anomalies", f"{len(anomalies):,}", 
+          delta=f"{(len(anomalies)/len(df)*100):.1f}% dari total", delta_color="inverse")
+m3.metric("Total Exposure Value", f"${anomalies[target_col].sum():,.2f}")
 
 st.divider()
 
-# Row 2: Visualizations
-c1, c2 = st.columns([7, 3])
-with c1:
+# 2. Visualizations (Bergerak Real-Time)
+col_left, col_right = st.columns([7, 3])
+
+with col_left:
     st.subheader("📊 Statistical Risk Landscape")
+    # Warna grafik mengikuti Risk Score
     fig = px.scatter(df, x=df.index, y=target_col, color="Risk_Score", 
-                     size=target_col, color_continuous_scale='RdYlGn_r')
+                     size=target_col, color_continuous_scale='RdYlGn_r',
+                     title=f"Mapping {len(df)} Data Points")
+    # Tambahkan garis ambang batas (Threshold Line) agar visual lebih presisi
+    fig.add_hline(y=(risk_threshold/100)*max_val, line_dash="dash", line_color="red", annotation_text="Risk Threshold")
     st.plotly_chart(fig, use_container_width=True)
-with c2:
+
+with col_right:
     st.subheader("🎯 Risk Segments")
-    risk_cat = pd.cut(df['Risk_Score'], bins=[0, 40, 75, 100], labels=['Low', 'Medium', 'High']).value_counts()
-    fig_pie = px.pie(values=risk_cat.values, names=risk_cat.index, hole=0.4,
-                     color=risk_cat.index, color_discrete_map={'High':'#FF4B4B', 'Medium':'#FFAA00', 'Low':'#00CC96'})
+    # Segmentasi ikut berubah real-time sesuai slider
+    risk_labels = ['Low', 'Medium', 'High']
+    # Dinamis bins berdasarkan slider
+    df['Category'] = pd.cut(df['Risk_Score'], bins=[0, risk_threshold-20, risk_threshold, 100], 
+                            labels=risk_labels, include_lowest=True)
+    seg_data = df['Category'].value_counts()
+    fig_pie = px.pie(values=seg_data.values, names=seg_data.index, hole=0.4,
+                     color=seg_data.index, color_discrete_map={'High':'#FF4B4B', 'Medium':'#FFAA00', 'Low':'#00CC96'})
     st.plotly_chart(fig_pie, use_container_width=True)
 
-# Row 3: Investigation List
+# 3. Investigation Table
 st.subheader("🚩 Investigation Priority List")
 st.dataframe(anomalies.sort_values(by='Risk_Score', ascending=False), use_container_width=True)
 
-# --- RAPI EXPORT DENGAN XLSXWRITER ---
+# --- EXPORT EXCEL RAPI ---
 def get_xlsx_download(df_export):
     output = BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         df_export.to_excel(writer, index=False, sheet_name='Audit_Report')
         workbook  = writer.book
         worksheet = writer.sheets['Audit_Report']
-        
         # Format Header
         header_fmt = workbook.add_format({'bold': True, 'fg_color': '#1F4E78', 'font_color': 'white', 'border': 1})
         for col_num, value in enumerate(df_export.columns.values):
@@ -126,5 +132,5 @@ def get_xlsx_download(df_export):
     return output.getvalue()
 
 if not anomalies.empty:
-    st.download_button("📥 Export Results to Excel", get_xlsx_download(anomalies), 
-                       "Audit_Report_saidUhuud.xlsx", "application/vnd.ms-excel")
+    st.download_button("📥 Export Anomalies to Excel", get_xlsx_download(anomalies), 
+                       "Quantitative_Audit_Report.xlsx", "application/vnd.ms-excel")
