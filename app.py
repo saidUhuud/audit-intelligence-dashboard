@@ -19,7 +19,9 @@ st.markdown("""
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/3201/3201521.png", width=100)
     st.title("Audit Control Panel")
-    st.info("Developed by: saidUhuud | Quantitative Developer & Statistical Consultant")
+    st.info("Developed by: saidUhuud 
+    
+            Quantitative Developer & Statistical Consultant")
     
     st.divider()
     st.subheader("1. Data Sample")
@@ -61,9 +63,9 @@ with st.sidebar:
         return output.getvalue()
 
     st.download_button(
-        label="📥 Download 1,500 Rows Sample (Excel)",
+        label="📥 Download Data Sample Here (Excel)",
         data=get_xlsx_sample(sample_df),
-        file_name="audit_sample_saiduhuud.xlsx",
+        file_name="audit_sample_1,500 Rows_saiduhuud.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
     st.caption("No data? Download this sample to test the app")
@@ -157,3 +159,4 @@ st.download_button(
 )
 
 st.sidebar.success("App Status: Ready for Audit")
+
