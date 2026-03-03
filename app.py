@@ -68,8 +68,6 @@ with st.sidebar:
                     worksheet.set_column(col_num, col_num, column_len, border_format)
                     
         return output.getvalue()
-
-    sample_df = generate_large_sample()
     
     # Fungsi konversi ke CSV
     def convert_df_to_csv(df_to_convert):
@@ -167,6 +165,7 @@ st.download_button(
 )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
 
 
