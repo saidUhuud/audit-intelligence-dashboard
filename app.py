@@ -81,10 +81,8 @@ if df is not None:
 
     # --- MAIN DASHBOARD UI ---
     st.title("🛡️ Audit Intelligence & Risk Dashboard")
+    st.warning("👈 **Please open the menu in the top left corner (arrow icon) to Upload Data or set the Threshold for mobile users**")
     
-    # Petunjuk Khusus Pengguna HP (Penting!)
-    st.warning("👈 **Buka menu di pojok kiri atas (ikon panah) untuk Upload Data atau atur Threshold jika Anda menggunakan HP.**")
-
     # Row 1: Key Metrics
     m1, m2, m3 = st.columns(3)
     m1.metric("Total Transactions", f"{len(df):,}")
@@ -133,3 +131,4 @@ if df is not None:
 
 st.sidebar.markdown("---")
 st.sidebar.success("✅ App is Live and Secure")
+
