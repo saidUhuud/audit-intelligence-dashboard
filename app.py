@@ -32,7 +32,7 @@ with st.sidebar:
         np.random.seed(42)
         data = {
             'Date': pd.date_range(start='2024-01-01', periods=1500, freq='H'),
-            'Vendor': np.random.choice(['Vendor A', 'Vendor B, 'Vendor C', 'Vendor D', 'Vendor E', 'Vendor F'], 1500),
+            'Vendor': np.random.choice(['Vendor A', 'Vendor B', 'Vendor C', 'Vendor D', 'Vendor E', 'Vendor F'], 1500),
             'Amount': np.random.lognormal(mean=8, sigma=1.2, size=1500).round(2),
             'Description': np.random.choice(['Service Fee', 'Procurement', 'Maintenance', 'Operational', 'Reimbursement'], 1500)
         }
@@ -138,3 +138,4 @@ if df is not None:
 
 st.sidebar.markdown("---")
 st.sidebar.caption("© 2026 saidUhuud | Statistical Consulting Division")
+
