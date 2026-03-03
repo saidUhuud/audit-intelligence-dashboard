@@ -69,14 +69,6 @@ with st.sidebar:
                     
         return output.getvalue()
 
-    # Tombol Download menggunakan format Excel (.xlsx)
-    st.download_button(
-        label="📥 Download 1,500 Rows Sample (Excel)",
-        data=get_xlsx_sample(sample_df),
-        file_name="audit_sample_saiduhuud.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    )
-    
     sample_df = generate_large_sample()
     
     # Fungsi konversi ke CSV
@@ -175,5 +167,6 @@ st.download_button(
 )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
 
