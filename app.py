@@ -146,14 +146,37 @@ with c1:
 
 with c2:
     st.subheader("Risk Category Breakdown")
-    # Segmentasi ikut berubah real-time sesuai slider
-    # Kita buat bins dinamis: Low (0-40), Medium (40-Threshold), High (Threshold-100)
-    # Pastikan bins unik dengan menggunakan set/sorted jika perlu, atau gunakan threshold langsung
-    bins = [0, 40, risk_threshold if risk_threshold > 40 else 70, 100]
-    risk_counts = pd.cut(df['Final_Score'], bins=bins, labels=['Low', 'Medium', 'High'], include_lowest=True).value_counts()
     
-    fig_pie = px.pie(values=risk_counts.values, names=risk_counts.index, 
-                     color=risk_counts.index, color_discrete_map={'High':'#ef553b', 'Medium':'#fecb52', 'Low':'#00cc96'})
+    # LOGIKA BINS YANG LEBIH STABIL
+    # Kita pastikan urutannya selalu naik: 0 -> 40 -> Threshold -> 100
+    # Jika threshold di bawah 40, kita sesuaikan agar tidak Error
+    low_limit = 40
+    current_threshold = risk_threshold
+    
+    if current_threshold <= low_limit:
+        bins = [0, current_threshold, (current_threshold + 100)/2, 100]
+    else:
+        bins = [0, low_limit, current_threshold, 100]
+    
+    # Menghitung distribusi risiko
+    risk_labels = ['Low', 'Medium', 'High']
+    df['Risk_Category'] = pd.cut(df['Final_Score'], bins=bins, labels=risk_labels, include_lowest=True)
+    risk_counts = df['Risk_Category'].value_counts().reset_index()
+    risk_counts.columns = ['Category', 'Count']
+
+    # Pie Chart dengan Plotly Express
+    fig_pie = px.pie(
+        risk_counts, 
+        values='Count', 
+        names='Category',
+        color='Category',
+        color_discrete_map={'High':'#ef553b', 'Medium':'#fecb52', 'Low':'#00cc96'},
+        hole=0.4 # Membuatnya jadi Donut Chart agar lebih modern
+    )
+    
+    fig_pie.update_traces(textposition='inside', textinfo='percent+label')
+    fig_pie.update_layout(showlegend=False, margin=dict(t=0, b=0, l=0, r=0))
+    
     st.plotly_chart(fig_pie, use_container_width=True)
 
 # Row 3: Investigation Table (Berubah Real-Time)
@@ -181,5 +204,6 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
 
