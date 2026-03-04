@@ -75,35 +75,39 @@ with st.sidebar:
     risk_threshold = st.slider("Select Risk Threshold (%)", 0, 100, 70)
     st.caption("Transactions above this score will be flagged as High Risk.")
 
-# --- MOCK DATA GENERATOR (VERSI TAHAN BANTING) ---
+# --- MOCK DATA GENERATOR (VERSI EXPERT: AUTO-CLEANING) ---
 def load_data(file):
     if file is not None:
         try:
             if file.name.endswith('.csv'):
-                # Menangani ribuan titik dan desimal koma di CSV
+                # sep=None dengan engine='python' otomatis mendeteksi pemisah (koma/titik koma)
                 df_loaded = pd.read_csv(file, sep=None, engine='python')
             else:
-                # Menangani Excel
                 df_loaded = pd.read_excel(file)
             
-            # --- PEMBERSIHAN OTOMATIS (DATA CLEANSING) ---
-            # Cari semua kolom yang harusnya angka tapi terbaca teks karena format Rp atau titik/koma
+            # --- PROSES PEMBERSIHAN OTOMATIS ---
             for col in df_loaded.columns:
+                # Jika kolom berisi teks (object), kita cek apakah itu angka yang 'salah format'
                 if df_loaded[col].dtype == 'object':
-                    # Cek jika kolom mengandung karakter angka
-                    sample_val = str(df_loaded[col].dropna().iloc[0]) if not df_loaded[col].dropna().empty else ""
-                    if any(char.isdigit() for char in sample_val) and any(c in sample_val for c in [',', '.']):
-                        # Bersihkan simbol Rp, spasi, dan titik ribuan, lalu ubah koma jadi titik desimal
-                        df_loaded[col] = df_loaded[col].astype(str).str.replace(r'[Rp\s.]', '', regex=True).str.replace(',', '.')
-                        # Ubah ke numerik, jika gagal biarkan jadi NaN
-                        df_loaded[col] = pd.to_numeric(df_loaded[col], errors='coerce')
+                    # Ambil contoh data non-kosong pertama
+                    non_null_data = df_loaded[col].dropna()
+                    if not non_null_data.empty:
+                        sample_val = str(non_null_data.iloc[0])
+                        # Cek jika mengandung angka dan karakter pemisah Indonesia (titik/koma)
+                        if any(char.isdigit() for char in sample_val):
+                            # Hapus simbol mata uang, spasi, dan titik (sebagai ribuan)
+                            df_loaded[col] = df_loaded[col].astype(str).str.replace(r'[Rp\s.]', '', regex=True)
+                            # Ubah koma menjadi titik (sebagai desimal standar Python)
+                            df_loaded[col] = df_loaded[col].str.replace(',', '.')
+                            # Konversi ke angka, paksa NaN jika tetap gagal
+                            df_loaded[col] = pd.to_numeric(df_loaded[col], errors='coerce')
             
             return df_loaded
         except Exception as e:
-            st.error(f"Error loading file: {e}")
+            st.error(f"Gagal memuat file: {e}")
             return pd.DataFrame()
     else:
-        # Data dummy awal (tetap sesuai pondasi)
+        # Data dummy awal tetap sesuai pondasi Anda
         data = {
             'Date': pd.date_range(start='2024-01-01', periods=200, freq='D'),
             'Vendor': np.random.choice(['Vendor X', 'Vendor Y', 'Vendor Z', 'Vendor K', 'Vendor L'], 200),
@@ -222,6 +226,7 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
 
 
