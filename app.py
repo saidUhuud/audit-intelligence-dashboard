@@ -157,7 +157,7 @@ else:
     st.stop()
 
 # --- 2. UPDATE UI DASHBOARD (REAL-TIME) ---
-st.title("🛡️ Python AI (Audit Intelligence) Dashboard")
+st.title("🛡️ AUDIT INTELLIGENCE CORE SYSTEMS")
 st.markdown("Transforming raw transactions into actionable audit insights!")
 st.warning("👈 **MOBILE USERS: Open sidebar for upload and threshold settings**")
 
@@ -230,6 +230,7 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
 
 
