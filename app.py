@@ -156,17 +156,10 @@ else:
     st.error("🚨 Gagal memproses data.")
     st.stop()
 
-# --- HEADER UTAMA ---
-st.title("🛡️ Audit Intelligence (AI) Sentinel")
-st.markdown("---") # Garis pembatas tipis
-
-# --- SIDEBAR (Tempat Brand Anda) ---
-with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/3201/3201521.png", width=80)
-    st.subheader("System Information")
-    st.write("Engineered by: **saidUhuud**")
-    st.caption("AI (Audit Intelligence) Core v2.0")
-
+# --- 2. UPDATE UI DASHBOARD (REAL-TIME) ---
+st.title("🛡️ Python AI (Audit Intelligence) Dashboard")
+st.markdown("Transforming raw transactions into actionable audit insights!")
+st.warning("👈 **MOBILE USERS: Open sidebar for upload and threshold settings**")
 
 # Row 1: Key Metrics (Dual Currency Mode)
 col1, col2, col3, col4 = st.columns(4)
