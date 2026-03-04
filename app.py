@@ -119,15 +119,37 @@ def load_data(file):
 
 # --- 1. LOGIK DINAMIS & REAL-TIME ---
 
-# Deteksi kolom angka secara otomatis agar tidak error
-numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-target_col = "Amount" # default
+# Safety Check: Pastikan df adalah DataFrame dan tidak kosong
+if isinstance(df, pd.DataFrame) and not df.empty:
+    # Deteksi kolom angka secara otomatis
+    numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+    target_col = "Amount" # default awal
 
-if numeric_cols:
-    for col in numeric_cols:
-        if any(x in col.lower() for x in ['amount', 'nilai', 'total', 'harga', 'price']):
-            target_col = col
-            break
+    if numeric_cols:
+        # Cari kolom yang namanya mirip dengan 'Amount' atau 'Nilai'
+        for col in numeric_cols:
+            if any(x in col.lower() for x in ['amount', 'nilai', 'total', 'harga', 'price']):
+                target_col = col
+                break
+        
+        # Pastikan target_col yang terpilih benar-benar ada di numeric_cols
+        if target_col not in numeric_cols:
+            target_col = numeric_cols[0]
+            
+        # --- PERHITUNGAN ULANG (REAL-TIME) ---
+        max_val = df[target_col].max() if df[target_col].max() > 0 else 1
+        df['Risk_Score'] = (df[target_col] / max_val * 100).round(2)
+        df['Is_Round'] = df[target_col].apply(lambda x: 1 if x % 100 == 0 else 0)
+        df['Final_Score'] = (df['Risk_Score'] + (df['Is_Round'] * 20)).clip(0, 100)
+
+        # Filter Anomali
+        anomalies = df[df['Final_Score'] >= risk_threshold].copy()
+    else:
+        st.error("🚨 Tidak ditemukan kolom angka (numerik) untuk di-audit. Pastikan format data benar.")
+        st.stop()
+else:
+    st.warning("⚠️ Data belum siap atau format tidak didukung.")
+    st.stop()
 
 # PERHITUNGAN ULANG (Setiap kali slider risk_threshold digeser, bagian ini dihitung ulang)
 max_val = df[target_col].max() if df[target_col].max() > 0 else 1
@@ -227,6 +249,7 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
 
 
