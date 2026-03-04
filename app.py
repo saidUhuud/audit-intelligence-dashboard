@@ -35,7 +35,7 @@ with st.sidebar:
         low, high = (1000000, 100000000) if mode == "Rupiah (IDR)" else (100, 50000)
         
         # Daftar Nama untuk simulasi kolom "Employee/Approver"
-        names = ['User-01', 'User-02', 'User-03', 'User-04', 'User-05', 'User-6']
+        names = ['User-01', 'User-02', 'User-03', 'User-04', 'User-05', 'User-06']
         
         data_sample = {
             'Transaction_ID': [f"TRX-{2025}{i:04d}" for i in range(1, 1501)], # ID Unik
@@ -230,6 +230,7 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
 
 
