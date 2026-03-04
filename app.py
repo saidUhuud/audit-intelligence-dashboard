@@ -23,20 +23,26 @@ with st.sidebar:
     
     st.divider()
     st.subheader("1. Data Sample")
+    
+    # Fitur Baru: Pilih Mata Uang Sample
+    currency_choice = st.radio("Choose Sample Currency:", ["Rupiah (IDR)", "Dollar (USD)"])
 
     # --- BAGIAN SAMPLE DATA (XLSXWRITER) ---
     @st.cache_data
-    def generate_large_sample():
+    def generate_large_sample(mode):
         np.random.seed(42)
+        # Logika Range Angka: Jutaan untuk IDR, Ratusan untuk USD
+        low, high = (1000000, 100000000) if mode == "Rupiah (IDR)" else (100, 50000)
+        
         data_sample = {
             'Date': pd.date_range(start='2025-01-01', periods=1500, freq='H'),
             'Vendor': np.random.choice(['Vendor A', 'Vendor B', 'Vendor C', 'Vendor D', 'Vendor E'], 1500),
-            'Amount': np.random.uniform(1000000, 100000000, 1500).round(2),
+            'Amount': np.random.uniform(low, high, 1500).round(2),
             'Description': np.random.choice(['Service Fee', 'Procurement', 'Maintenance', 'Operational'], 1500)
         }
         return pd.DataFrame(data_sample)
 
-    sample_df = generate_large_sample()
+    sample_df = generate_large_sample(currency_choice)
 
     def get_xlsx_sample(df_sample):
         output = BytesIO()
@@ -61,9 +67,9 @@ with st.sidebar:
         return output.getvalue()
 
     st.download_button(
-        label="📥 Download Data Sample Here",
+        label=f"📥 Download {currency_choice} Sample",
         data=get_xlsx_sample(sample_df),
-        file_name="audit_sample_1,500 Rows_saidUhuud.xlsx",
+        file_name=f"audit_sample_{currency_choice.split()[0]}_saidUhuud.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
     st.caption("No data? Download this sample to test!")
@@ -80,33 +86,24 @@ def load_data(file):
     if file is not None:
         try:
             if file.name.endswith('.csv'):
-                # Menangani pemisah otomatis
                 df_loaded = pd.read_csv(file, sep=None, engine='python')
             else:
                 df_loaded = pd.read_excel(file)
             
-            # --- PEMBERSIHAN DATA (CLEANSING) ---
             for col in df_loaded.columns:
                 if df_loaded[col].dtype == 'object':
-                    # Ambil contoh data non-kosong
                     sample_series = df_loaded[col].dropna()
                     if not sample_series.empty:
                         sample_val = str(sample_series.iloc[0])
-                        # Jika mengandung angka, kita bersihkan format Indonesia/Mata Uang
                         if any(char.isdigit() for char in sample_val):
-                            # Hapus Rp, spasi, dan titik ribuan
                             df_loaded[col] = df_loaded[col].astype(str).str.replace(r'[Rp\s.]', '', regex=True)
-                            # Ubah koma desimal menjadi titik desimal Python
                             df_loaded[col] = df_loaded[col].str.replace(',', '.')
-                            # Konversi ke numerik (paksa jadi NaN jika gagal total)
                             df_loaded[col] = pd.to_numeric(df_loaded[col], errors='coerce')
             
-            # Pastikan selalu mengembalikan DataFrame, bukan None
             return df_loaded if df_loaded is not None else pd.DataFrame()
-            
         except Exception as e:
             st.error(f"Error reading file: {e}")
-            return pd.DataFrame() # Kembalikan DF kosong jika error agar baris bawah tidak crash
+            return pd.DataFrame()
     else:
         # Data dummy awal (Pondasi Anda)
         data = {
@@ -117,122 +114,93 @@ def load_data(file):
         }
         return pd.DataFrame(data)
 
-# --- EKSEKUSI DATA (PASTI ADA DF) ---
-# Panggil fungsi load_data dan simpan hasilnya ke variabel df
+# --- EKSEKUSI DATA ---
 df = load_data(uploaded_file)
 
 # --- 1. LOGIK DINAMIS & REAL-TIME ---
-
-# Safety Check: Pastikan df bukan None dan merupakan DataFrame
 if df is not None and isinstance(df, pd.DataFrame):
     if not df.empty:
-        # Deteksi kolom angka secara otomatis
         numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-        target_col = "Amount" # default awal
+        target_col = "Amount" 
 
         if numeric_cols:
-            # Cari kolom yang namanya mirip dengan 'Amount' atau 'Nilai'
             for col in numeric_cols:
                 if any(x in col.lower() for x in ['amount', 'nilai', 'total', 'harga', 'price']):
                     target_col = col
                     break
             
-            # Jika target_col (Amount) tidak ada di kolom angka, ambil angka pertama yang ada
             if target_col not in numeric_cols:
                 target_col = numeric_cols[0]
                 
-            # --- PERHITUNGAN ULANG (REAL-TIME) ---
+            # --- LOGIKA DETEKSI MATA UANG ---
+            # Jika rata-rata > 100.000, kita asumsikan IDR. Jika di bawah itu, USD.
+            is_rupiah = df[target_col].mean() > 100000
+
             max_val = df[target_col].max() if df[target_col].max() > 0 else 1
             df['Risk_Score'] = (df[target_col] / max_val * 100).round(2)
             df['Is_Round'] = df[target_col].apply(lambda x: 1 if x % 100 == 0 else 0)
             df['Final_Score'] = (df['Risk_Score'] + (df['Is_Round'] * 20)).clip(0, 100)
-
-            # Filter Anomali
             anomalies = df[df['Final_Score'] >= risk_threshold].copy()
         else:
             st.error("🚨 Tidak ditemukan kolom angka (numerik).")
             st.stop()
     else:
-        st.warning("⚠️ Data kosong. Silakan cek file Anda.")
+        st.warning("⚠️ Data kosong.")
         st.stop()
 else:
-    st.error("🚨 Gagal memproses data. Variabel data tidak terbentuk.")
+    st.error("🚨 Gagal memproses data.")
     st.stop()
 
-# PERHITUNGAN ULANG (Setiap kali slider risk_threshold digeser, bagian ini dihitung ulang)
-max_val = df[target_col].max() if df[target_col].max() > 0 else 1
-df['Risk_Score'] = (df[target_col] / max_val * 100).round(2)
-df['Is_Round'] = df[target_col].apply(lambda x: 1 if x % 100 == 0 else 0)
-df['Final_Score'] = (df['Risk_Score'] + (df['Is_Round'] * 20)).clip(0, 100)
-
-# Filter Anomali (Sangat bergantung pada slider risk_threshold secara real-time)
-anomalies = df[df['Final_Score'] >= risk_threshold].copy()
-
 # --- 2. UPDATE UI DASHBOARD (REAL-TIME) ---
-
 st.title("🛡️ Python AI (Audit Intelligence) Dashboard")
 st.markdown("Transforming raw transactions into actionable audit insights!")
-st.warning("👈 **MOBILE USERS: Please open the sidebar menu (arrow icon) to upload data and adjust threshold**")
+st.warning("👈 **MOBILE USERS: Open sidebar for upload and threshold settings**")
 
-# Row 1: Key Metrics (Ikut berubah saat slider digeser)
+# Row 1: Key Metrics (Dual Currency Mode)
 col1, col2, col3, col4 = st.columns(4)
 col1.metric("Total Transactions", f"{len(df):,}")
 col2.metric("Detected Anomalies", f"{len(anomalies):,}", 
            delta=f"{(len(anomalies)/len(df)*100):.1f}% from total", delta_color="inverse")
-col3.metric("Total Exposure", f"${anomalies[target_col].sum():,.0f}")
-col4.metric("Avg Risk Score", f"{df['Final_Score'].mean():,.1f}")
+
+with col3:
+    # Baris atas untuk Rupiah, baris bawah untuk Dollar
+    val_idr = f"Rp {anomalies[target_col].sum():,.0f}" if is_rupiah else "-"
+    val_usd = f"${anomalies[target_col].sum():,.2f}" if not is_rupiah else "-"
+    st.metric("Total Exposure (IDR)", val_idr)
+    st.metric("Total Exposure (USD)", val_usd)
+
+with col4:
+    st.metric("Avg Risk Score", f"{df['Final_Score'].mean():,.1f}")
+    st.caption(f"Detected: **{'IDR' if is_rupiah else 'USD'} Mode**")
 
 st.divider()
 
-# Row 2: Visualizations (Bergerak secara Real-Time)
+# Row 2: Visualizations
 c1, c2 = st.columns([6, 4])
 
 with c1:
     st.subheader("Transaction Risk Distribution")
-    # Menggunakan target_col agar fleksibel dengan file apa pun
     fig = px.scatter(df, x=df.index, y=target_col, color="Final_Score", 
-                     size=target_col, color_continuous_scale='RdYlGn_r',
-                     title="Visualizing Risks over Time")
-    # Tambahkan garis ambang batas (Threshold Line) agar visual lebih presisi
+                     size=target_col, color_continuous_scale='RdYlGn_r')
     fig.add_hline(y=(risk_threshold/100)*max_val, line_dash="dash", line_color="red", annotation_text="Threshold")
     st.plotly_chart(fig, use_container_width=True)
 
 with c2:
     st.subheader("Risk Category Breakdown")
-    
-    # LOGIKA BINS YANG LEBIH STABIL
-    # Kita pastikan urutannya selalu naik: 0 -> 40 -> Threshold -> 100
-    # Jika threshold di bawah 40, kita sesuaikan agar tidak Error
     low_limit = 40
     current_threshold = risk_threshold
+    bins = [0, low_limit, current_threshold, 100] if current_threshold > low_limit else [0, current_threshold, (current_threshold+100)/2, 100]
     
-    if current_threshold <= low_limit:
-        bins = [0, current_threshold, (current_threshold + 100)/2, 100]
-    else:
-        bins = [0, low_limit, current_threshold, 100]
-    
-    # Menghitung distribusi risiko
     risk_labels = ['Low', 'Medium', 'High']
     df['Risk_Category'] = pd.cut(df['Final_Score'], bins=bins, labels=risk_labels, include_lowest=True)
     risk_counts = df['Risk_Category'].value_counts().reset_index()
     risk_counts.columns = ['Category', 'Count']
 
-    # Pie Chart dengan Plotly Express
-    fig_pie = px.pie(
-        risk_counts, 
-        values='Count', 
-        names='Category',
-        color='Category',
-        color_discrete_map={'High':'#ef553b', 'Medium':'#fecb52', 'Low':'#00cc96'},
-        hole=0.4 # Membuatnya jadi Donut Chart agar lebih modern
-    )
-    
-    fig_pie.update_traces(textposition='inside', textinfo='percent+label')
+    fig_pie = px.pie(risk_counts, values='Count', names='Category', color='Category',
+                     color_discrete_map={'High':'#ef553b', 'Medium':'#fecb52', 'Low':'#00cc96'}, hole=0.4)
     fig_pie.update_layout(showlegend=False, margin=dict(t=0, b=0, l=0, r=0))
-    
     st.plotly_chart(fig_pie, use_container_width=True)
 
-# Row 3: Investigation Table (Berubah Real-Time)
 st.subheader("🚩 Anomaly Investigation List")
 st.dataframe(anomalies.sort_values(by='Final_Score', ascending=False), use_container_width=True)
 
@@ -257,15 +225,3 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
-
-
-
-
-
-
-
-
-
-
-
-
