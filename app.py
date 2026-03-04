@@ -28,7 +28,6 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     
     st.divider()
-    # ... (sisanya tetap sama: Data Sample, Upload, dll)
     st.subheader("1. Data Sample")
     
     currency_choice = st.radio("Choose Sample Currency:", ["Rupiah (IDR)", "Dollar (USD)"])
@@ -113,7 +112,7 @@ def load_data(file):
             st.error(f"Error reading file: {e}")
             return pd.DataFrame()
     else:
-        # Data dummy awal (Pondasi Anda)
+        #Data dummy 
         data = {
             'Date': pd.date_range(start='2024-01-01', periods=200, freq='D'),
             'Vendor': np.random.choice(['Vendor X', 'Vendor Y', 'Vendor Z', 'Vendor K', 'Vendor L'], 200),
@@ -228,6 +227,7 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
 
 
