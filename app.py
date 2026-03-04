@@ -35,7 +35,7 @@ with st.sidebar:
         low, high = (1000000, 100000000) if mode == "Rupiah (IDR)" else (100, 50000)
         
         data_sample = {
-            'Transaction_ID : [f"RX-{2025}{i:40d}" for i in range(1, 1501)],
+            'Transaction_ID': [f"RX-{2025}{i:40d}" for i in range(1, 1501)],
             'Date': pd.date_range(start='2025-01-01', periods=1500, freq='H'),
             'Employee_Name': np.random.choice(name,1500), 
             'Vendor': np.random.choice(['Vendor A', 'Vendor B', 'Vendor C', 'Vendor D', 'Vendor E'], 1500),
@@ -227,4 +227,5 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
