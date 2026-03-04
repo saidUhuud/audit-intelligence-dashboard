@@ -15,13 +15,24 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- SIDEBAR (INPUT) ---
+# --- SIDEBAR (IDENTITAS PROFESIONAL) ---
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/3201/3201521.png", width=100)
     st.title("Audit Control Panel")
-    st.info("Developed by: saidUhuud")
+    
+    # Identitas Profesional yang Kuat
+    st.markdown(f"""
+        <div style='background-color: #e1f5fe; padding: 15px; border-radius: 10px; border-left: 5px solid #0288d1;'>
+            <p style='margin: 0; font-weight: bold; color: #01579b;'>Developed by:</p>
+            <p style='margin: 0; font-size: 1.1em; font-weight: bold; color: #000;'>saidUhuud</p>
+            <hr style='margin: 10px 0;'>
+            <p style='margin: 0; font-size: 0.85em; color: #0277bd;'><b>Quantitative Developer</b></p>
+            <p style='margin: 0; font-size: 0.85em; color: #0277bd;'><b>Statistical Consultant</b></p>
+        </div>
+    """, unsafe_allow_html=True)
     
     st.divider()
+    # ... (sisanya tetap sama: Data Sample, Upload, dll)
     st.subheader("1. Data Sample")
     
     # Fitur Baru: Pilih Mata Uang Sample
@@ -230,6 +241,7 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
 
 
