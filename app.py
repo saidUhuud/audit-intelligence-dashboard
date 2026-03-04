@@ -4,10 +4,8 @@ import numpy as np
 import plotly.express as px
 from io import BytesIO
 
-# --- CONFIGURATION & UI ---
 st.set_page_config(page_title="saidUhuud | Audit Intelligence Dashboard", layout="wide")
 
-# Custom CSS untuk mempercantik tampilan
 st.markdown("""
     <style>
     .main { background-color: #f5f7f9; }
@@ -15,12 +13,10 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- SIDEBAR (IDENTITAS PROFESIONAL) ---
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/3201/3201521.png", width=100)
     st.title("Audit Control Panel")
     
-    # Identitas Profesional yang Kuat
     st.markdown(f"""
         <div style='background-color: #e1f5fe; padding: 15px; border-radius: 10px; border-left: 5px solid #0288d1;'>
             <p style='margin: 0; font-weight: bold; color: #01579b;'>Developed by:</p>
@@ -35,17 +31,13 @@ with st.sidebar:
     # ... (sisanya tetap sama: Data Sample, Upload, dll)
     st.subheader("1. Data Sample")
     
-    # Fitur Baru: Pilih Mata Uang Sample
     currency_choice = st.radio("Choose Sample Currency:", ["Rupiah (IDR)", "Dollar (USD)"])
 
-    # --- BAGIAN SAMPLE DATA (XLSXWRITER) DENGAN KOLOM TAMBAHAN ---
     @st.cache_data
     def generate_large_sample(mode):
         np.random.seed(42)
-        # Logika Range Angka: Jutaan untuk IDR, Ratusan untuk USD
         low, high = (1000000, 100000000) if mode == "Rupiah (IDR)" else (100, 50000)
         
-        # Daftar Nama untuk simulasi kolom "Employee/Approver"
         names = ['User-01', 'User-02', 'User-03', 'User-04', 'User-05', 'User-06']
         
         data_sample = {
@@ -97,7 +89,7 @@ with st.sidebar:
     risk_threshold = st.slider("Select Risk Threshold (%)", 0, 100, 70)
     st.caption("Transactions above this score will be flagged as High Risk.")
 
-# --- MOCK DATA GENERATOR (VERSI STABIL & TAHAN BANTING) ---
+#MOCK DATA GENERATOR
 def load_data(file):
     if file is not None:
         try:
@@ -130,10 +122,9 @@ def load_data(file):
         }
         return pd.DataFrame(data)
 
-# --- EKSEKUSI DATA ---
 df = load_data(uploaded_file)
 
-# --- 1. LOGIK DINAMIS & REAL-TIME ---
+#FOR REAL TIME DATA
 if df is not None and isinstance(df, pd.DataFrame):
     if not df.empty:
         numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
@@ -148,8 +139,6 @@ if df is not None and isinstance(df, pd.DataFrame):
             if target_col not in numeric_cols:
                 target_col = numeric_cols[0]
                 
-            # --- LOGIKA DETEKSI MATA UANG ---
-            # Jika rata-rata > 100.000, kita asumsikan IDR. Jika di bawah itu, USD.
             is_rupiah = df[target_col].mean() > 100000
 
             max_val = df[target_col].max() if df[target_col].max() > 0 else 1
@@ -158,28 +147,26 @@ if df is not None and isinstance(df, pd.DataFrame):
             df['Final_Score'] = (df['Risk_Score'] + (df['Is_Round'] * 20)).clip(0, 100)
             anomalies = df[df['Final_Score'] >= risk_threshold].copy()
         else:
-            st.error("🚨 Tidak ditemukan kolom angka (numerik).")
+            st.error("🚨 No numeric column found!")
             st.stop()
     else:
-        st.warning("⚠️ Data kosong.")
+        st.warning("⚠️ Empety Data!")
         st.stop()
 else:
-    st.error("🚨 Gagal memproses data.")
+    st.error("🚨 Failed to process data!")
     st.stop()
 
-# --- 2. UPDATE UI DASHBOARD (REAL-TIME) ---
 st.title("🛡️ AUDIT INTELLIGENCE CORE SYSTEMS")
 st.markdown("Transforming raw transactions into actionable audit insights!")
 st.warning("👈 **MOBILE USERS: Open sidebar for upload and threshold settings**")
 
-# Row 1: Key Metrics (Dual Currency Mode)
+#DUAL CURRENCY MODE
 col1, col2, col3, col4 = st.columns(4)
 col1.metric("Total Transactions", f"{len(df):,}")
 col2.metric("Detected Anomalies", f"{len(anomalies):,}", 
            delta=f"{(len(anomalies)/len(df)*100):.1f}% from total", delta_color="inverse")
 
 with col3:
-    # Baris atas untuk Rupiah, baris bawah untuk Dollar
     val_idr = f"Rp {anomalies[target_col].sum():,.0f}" if is_rupiah else "-"
     val_usd = f"${anomalies[target_col].sum():,.2f}" if not is_rupiah else "-"
     st.metric("Total Exposure (IDR)", val_idr)
@@ -191,7 +178,7 @@ with col4:
 
 st.divider()
 
-# Row 2: Visualizations
+#Visualizations
 c1, c2 = st.columns([6, 4])
 
 with c1:
@@ -220,7 +207,7 @@ with c2:
 st.subheader("🚩 Anomaly Investigation List")
 st.dataframe(anomalies.sort_values(by='Final_Score', ascending=False), use_container_width=True)
 
-# --- 3. EXPORT TO EXCEL ---
+#EXPORT TO EXCEL
 def to_excel(df_export):
     output = BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
@@ -241,6 +228,7 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
 
 
