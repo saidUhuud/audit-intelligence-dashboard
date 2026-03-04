@@ -117,9 +117,9 @@ anomalies = df[df['Final_Score'] >= risk_threshold].copy()
 
 # --- 2. UPDATE UI DASHBOARD (REAL-TIME) ---
 
-st.title("🛡️ Audit Intelligence & Risk Dashboard")
-st.markdown("Transforming raw transactions into actionable audit insights.")
-st.warning("👈 **Please open the sidebar menu (arrow icon) to upload data and adjust threshold for mobile users**")
+st.title("🛡️ Python AI (Audit Intelligence) Dashboard")
+st.markdown("Transforming raw transactions into actionable audit insights!")
+st.warning("👈 **MOBILE USERS: Please open the sidebar menu (arrow icon) to upload data and adjust threshold**")
 
 # Row 1: Key Metrics (Ikut berubah saat slider digeser)
 col1, col2, col3, col4 = st.columns(4)
@@ -171,7 +171,7 @@ with c2:
         names='Category',
         color='Category',
         color_discrete_map={'High':'#ef553b', 'Medium':'#fecb52', 'Low':'#00cc96'},
-        hole=0.4 # Membuatnya jadi Donut Chart agar lebih modern
+        hole=0.2 # Membuatnya jadi Donut Chart agar lebih modern
     )
     
     fig_pie.update_traces(textposition='inside', textinfo='percent+label')
@@ -204,6 +204,7 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
 
 
