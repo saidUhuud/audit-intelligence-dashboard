@@ -27,7 +27,7 @@ with st.sidebar:
     # Fitur Baru: Pilih Mata Uang Sample
     currency_choice = st.radio("Choose Sample Currency:", ["Rupiah (IDR)", "Dollar (USD)"])
 
-# --- BAGIAN SAMPLE DATA (XLSXWRITER) DENGAN KOLOM TAMBAHAN ---
+    # --- BAGIAN SAMPLE DATA (XLSXWRITER) DENGAN KOLOM TAMBAHAN ---
     @st.cache_data
     def generate_large_sample(mode):
         np.random.seed(42)
@@ -230,6 +230,7 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
 
 
