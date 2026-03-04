@@ -30,7 +30,7 @@ with st.sidebar:
         np.random.seed(42)
         data_sample = {
             'Date': pd.date_range(start='2025-01-01', periods=1500, freq='H'),
-            'Vendor': np.random.choice(['Alpha Tech', 'Beta Corp', 'Global Solutions', 'Delta Industry', 'Indo Prima'], 1500),
+            'Vendor': np.random.choice(['Vendor A', 'Vendor B', 'Vendor C', 'Vendor D', 'Vendor E'], 1500),
             'Amount': np.random.uniform(1000000, 100000000, 1500).round(2),
             'Description': np.random.choice(['Service Fee', 'Procurement', 'Maintenance', 'Operational'], 1500)
         }
@@ -61,12 +61,12 @@ with st.sidebar:
         return output.getvalue()
 
     st.download_button(
-        label="📥 Download Data Sample Here (Excel)",
+        label="📥 Download Data Sample Here",
         data=get_xlsx_sample(sample_df),
-        file_name="audit_sample_1,500 Rows_saiduhuud.xlsx",
+        file_name="audit_sample_1,500 Rows_saidUhuud.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
-    st.caption("No data? Download this sample to test the app")
+    st.caption("No data? Download this sample to test!")
     
     st.divider()
     st.subheader("2. Upload & Settings")
@@ -86,7 +86,7 @@ def load_data(file):
         # Data dummy untuk demonstrasi awal (200 baris sesuai pondasi awal)
         data = {
             'Date': pd.date_range(start='2024-01-01', periods=200, freq='D'),
-            'Vendor': np.random.choice(['Vendor A', 'Vendor B', 'Vendor C', 'Global Corp', 'Indo Jaya'], 200),
+            'Vendor': np.random.choice(['Vendor X', 'Vendor Y', 'Vendor Z', 'Vendor K', 'Vendor L'], 200),
             'Amount': np.random.uniform(1000, 50000, 200).round(2),
             'Description': 'Purchase Order'
         }
@@ -119,7 +119,7 @@ anomalies = df[df['Final_Score'] >= risk_threshold].copy()
 
 st.title("🛡️ Audit Intelligence & Risk Dashboard")
 st.markdown("Transforming raw transactions into actionable audit insights.")
-st.warning("👈 **Mobile Users: Open the sidebar menu (arrow icon) to upload data and adjust threshold.**")
+st.warning("👈 **Please open the sidebar menu (arrow icon) to upload data and adjust threshold for mobile users**")
 
 # Row 1: Key Metrics (Ikut berubah saat slider digeser)
 col1, col2, col3, col4 = st.columns(4)
@@ -181,4 +181,5 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
