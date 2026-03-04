@@ -33,6 +33,8 @@ with st.sidebar:
         np.random.seed(42)
         # Logika Range Angka: Jutaan untuk IDR, Ratusan untuk USD
         low, high = (1000000, 100000000) if mode == "Rupiah (IDR)" else (100, 50000)
+
+        names = ['Andi Hermawan', 'Budi Santoso', 'Siti Aminah', 'Dewi Lestari', 'Eko Prasetyo', 'Rina Wijaya'],
         
         data_sample = {
             'Transaction_ID': [f"TRX-{2025}{i:04d}" for i in range(1, 1501)],
@@ -227,6 +229,7 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
 
 
