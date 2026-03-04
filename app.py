@@ -4,7 +4,7 @@ import numpy as np
 import plotly.express as px
 from io import BytesIO
 
-# --- CONFIGURATION ---
+# --- 1. CONFIGURATION ---
 st.set_page_config(page_title="AUDIT INTELLIGENCE CORE SYSTEMS", layout="wide")
 
 st.markdown("""
@@ -14,7 +14,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- SIDEBAR ---
+# --- 2. SIDEBAR (PROFESSIONAL IDENTITY & CONTROLS) ---
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/3201/3201521.png", width=100)
     st.title("Audit Control Panel")
@@ -39,13 +39,12 @@ with st.sidebar:
         np.random.seed(42)
         low, high = (1000000, 100000000) if mode == "Rupiah (IDR)" else (100, 50000)
         
-        # Consistent User IDs
         user_list = [f"User-0{i}" for i in range(1, 7)]
         
         data_sample = {
             'Transaction_ID': [f"TRX-2025-{i:04d}" for i in range(1, 1501)],
             'Date': pd.date_range(start='2025-01-01', periods=1500, freq='H'),
-            'User_ID': np.random.choice(user_list, 1500), 
+            'User_ID': np.random.choice(user_list, 1500),
             'Vendor': np.random.choice(['Vendor A', 'Vendor B', 'Vendor C', 'Vendor D', 'Vendor E'], 1500),
             'Amount': np.random.uniform(low, high, 1500).round(2),
             'Description': np.random.choice(['Service Fee', 'Procurement', 'Maintenance', 'Operational'], 1500)
@@ -91,7 +90,7 @@ with st.sidebar:
     risk_threshold = st.slider("Select Risk Threshold (%)", 0, 100, 70)
     st.caption("Transactions above this score will be flagged as High Risk.")
 
-# --- DATA LOADING ENGINE ---
+# --- 3. DATA LOADING ENGINE ---
 def load_data(file):
     if file is not None:
         try:
@@ -106,19 +105,22 @@ def load_data(file):
                     if not sample_series.empty:
                         sample_val = str(sample_series.iloc[0])
                         if any(char.isdigit() for char in sample_val):
-                            # Clean IDR/Global formatting
+                            # Cleaning currency and digit formatting
                             df_loaded[col] = df_loaded[col].astype(str).str.replace(r'[Rp\s.]', '', regex=True)
                             df_loaded[col] = df_loaded[col].str.replace(',', '.')
                             df_loaded[col] = pd.to_numeric(df_loaded[col], errors='coerce')
             
-            return df_loaded if df_loaded is not None else pd.DataFrame()
+            return df_loaded
         except Exception as e:
             st.error(f"Error reading file: {e}")
             return pd.DataFrame()
     else:
-        # Default Dummy Data
+        # Default dummy data using correct column names
+        user_list = [f"User-0{i}" for i in range(1, 7)]
         data = {
+            'Transaction_ID': [f"TRX-2024-{i:04d}" for i in range(1, 201)],
             'Date': pd.date_range(start='2024-01-01', periods=200, freq='D'),
+            'User_ID': np.random.choice(user_list, 200),
             'Vendor': np.random.choice(['Vendor X', 'Vendor Y', 'Vendor Z', 'Vendor K', 'Vendor L'], 200),
             'Amount': np.random.uniform(1000, 50000, 200).round(2),
             'Description': 'Purchase Order'
@@ -127,7 +129,7 @@ def load_data(file):
 
 df = load_data(uploaded_file)
 
-# --- ANALYTICS ENGINE ---
+# --- 4. ANALYTICS ENGINE (REAL-TIME) ---
 if df is not None and isinstance(df, pd.DataFrame):
     if not df.empty:
         numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
@@ -144,10 +146,13 @@ if df is not None and isinstance(df, pd.DataFrame):
                 
             is_rupiah = df[target_col].mean() > 100000
 
+            # Risk Calculations
             max_val = df[target_col].max() if df[target_col].max() > 0 else 1
             df['Risk_Score'] = (df[target_col] / max_val * 100).round(2)
             df['Is_Round'] = df[target_col].apply(lambda x: 1 if x % 100 == 0 else 0)
             df['Final_Score'] = (df['Risk_Score'] + (df['Is_Round'] * 20)).clip(0, 100)
+            
+            # Filtering Anomaly - Keep all original columns
             anomalies = df[df['Final_Score'] >= risk_threshold].copy()
         else:
             st.error("🚨 No numeric columns found!")
@@ -159,7 +164,7 @@ else:
     st.error("🚨 Failed to process data!")
     st.stop()
 
-# --- DASHBOARD UI ---
+# --- 5. DASHBOARD UI ---
 st.title("🛡️ AUDIT INTELLIGENCE CORE SYSTEMS")
 st.markdown("Transforming raw transactions into actionable audit insights!")
 st.warning("👈 **MOBILE USERS: Open sidebar for upload and threshold settings**")
@@ -208,11 +213,14 @@ with c2:
     fig_pie.update_layout(showlegend=False, margin=dict(t=0, b=0, l=0, r=0))
     st.plotly_chart(fig_pie, use_container_width=True)
 
-# Row 3: Investigation
+# Row 3: Investigation Table
 st.subheader("🚩 Anomaly Investigation List")
-st.dataframe(anomalies.sort_values(by='Final_Score', ascending=False), use_container_width=True)
+# Re-ordering columns for better visibility
+cols_to_show = ['Transaction_ID', 'Date', 'User_ID', 'Vendor', target_col, 'Final_Score']
+existing_cols = [c for c in cols_to_show if c in anomalies.columns]
+st.dataframe(anomalies[existing_cols].sort_values(by='Final_Score', ascending=False), use_container_width=True)
 
-# --- EXPORT FUNCTION ---
+# --- 6. EXPORT FUNCTION ---
 def to_excel(df_export):
     output = BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
