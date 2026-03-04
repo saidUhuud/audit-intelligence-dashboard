@@ -90,7 +90,7 @@ with st.sidebar:
     risk_threshold = st.slider("Select Risk Threshold (%)", 0, 100, 70)
     st.caption("Transactions above this score will be flagged as High Risk.")
 
-# --- 3. DATA LOADING ENGINE ---
+# --- 3. DATA LOADING ENGINE (SOLVED: PROTECTING IDs) ---
 def load_data(file):
     if file is not None:
         try:
@@ -99,13 +99,18 @@ def load_data(file):
             else:
                 df_loaded = pd.read_excel(file)
             
+            # Kunci perbaikan ada di sini: Hanya bersihkan kolom yang mengandung kata kunci 'uang'
+            money_keywords = ['amount', 'nilai', 'total', 'harga', 'price', 'nominal']
+            
             for col in df_loaded.columns:
-                if df_loaded[col].dtype == 'object':
+                # Cek apakah ini kolom nominal?
+                is_money_col = any(key in col.lower() for key in money_keywords)
+                
+                if is_money_col and df_loaded[col].dtype == 'object':
                     sample_series = df_loaded[col].dropna()
                     if not sample_series.empty:
                         sample_val = str(sample_series.iloc[0])
                         if any(char.isdigit() for char in sample_val):
-                            # Cleaning currency and digit formatting
                             df_loaded[col] = df_loaded[col].astype(str).str.replace(r'[Rp\s.]', '', regex=True)
                             df_loaded[col] = df_loaded[col].str.replace(',', '.')
                             df_loaded[col] = pd.to_numeric(df_loaded[col], errors='coerce')
@@ -115,7 +120,6 @@ def load_data(file):
             st.error(f"Error reading file: {e}")
             return pd.DataFrame()
     else:
-        # Default dummy data using correct column names
         user_list = [f"User-0{i}" for i in range(1, 7)]
         data = {
             'Transaction_ID': [f"TRX-2024-{i:04d}" for i in range(1, 201)],
@@ -215,7 +219,6 @@ with c2:
 
 # Row 3: Investigation Table
 st.subheader("🚩 Anomaly Investigation List")
-# Re-ordering columns for better visibility
 cols_to_show = ['Transaction_ID', 'Date', 'User_ID', 'Vendor', target_col, 'Final_Score']
 existing_cols = [c for c in cols_to_show if c in anomalies.columns]
 st.dataframe(anomalies[existing_cols].sort_values(by='Final_Score', ascending=False), use_container_width=True)
