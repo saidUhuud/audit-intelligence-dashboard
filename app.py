@@ -27,15 +27,20 @@ with st.sidebar:
     # Fitur Baru: Pilih Mata Uang Sample
     currency_choice = st.radio("Choose Sample Currency:", ["Rupiah (IDR)", "Dollar (USD)"])
 
-    # --- BAGIAN SAMPLE DATA (XLSXWRITER) ---
+    # --- BAGIAN SAMPLE DATA (XLSXWRITER) DENGAN KOLOM TAMBAHAN ---
     @st.cache_data
     def generate_large_sample(mode):
         np.random.seed(42)
         # Logika Range Angka: Jutaan untuk IDR, Ratusan untuk USD
         low, high = (1000000, 100000000) if mode == "Rupiah (IDR)" else (100, 50000)
         
+        # Daftar Nama untuk simulasi kolom "Employee/Approver"
+        names = ['Andi Hermawan', 'Budi Santoso', 'Siti Aminah', 'Dewi Lestari', 'Eko Prasetyo', 'Rina Wijaya']
+        
         data_sample = {
+            'Transaction_ID': [f"TRX-{2025}{i:04d}" for i in range(1, 1501)], # ID Unik
             'Date': pd.date_range(start='2025-01-01', periods=1500, freq='H'),
+            'Employee_Name': np.random.choice(names, 1500), # Kolom Nama Orang
             'Vendor': np.random.choice(['Vendor A', 'Vendor B', 'Vendor C', 'Vendor D', 'Vendor E'], 1500),
             'Amount': np.random.uniform(low, high, 1500).round(2),
             'Description': np.random.choice(['Service Fee', 'Procurement', 'Maintenance', 'Operational'], 1500)
@@ -225,3 +230,4 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
