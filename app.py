@@ -125,7 +125,7 @@ st.warning("👈 **MOBILE USERS: Please open the sidebar menu (arrow icon) to up
 col1, col2, col3, col4 = st.columns(4)
 col1.metric("Total Transactions", f"{len(df):,}")
 col2.metric("Detected Anomalies", f"{len(anomalies):,}", 
-           delta=f"{(len(anomalies)/len(df)*100):.1f}% dari total", delta_color="inverse")
+           delta=f"{(len(anomalies)/len(df)*100):.1f}% from total", delta_color="inverse")
 col3.metric("Total Exposure", f"${anomalies[target_col].sum():,.0f}")
 col4.metric("Avg Risk Score", f"{df['Final_Score'].mean():,.1f}")
 
@@ -204,6 +204,7 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
 
 
