@@ -75,15 +75,35 @@ with st.sidebar:
     risk_threshold = st.slider("Select Risk Threshold (%)", 0, 100, 70)
     st.caption("Transactions above this score will be flagged as High Risk.")
 
-# --- MOCK DATA GENERATOR ---
+# --- MOCK DATA GENERATOR (VERSI TAHAN BANTING) ---
 def load_data(file):
     if file is not None:
-        if file.name.endswith('.csv'):
-            return pd.read_csv(file)
-        else:
-            return pd.read_excel(file)
+        try:
+            if file.name.endswith('.csv'):
+                # Menangani ribuan titik dan desimal koma di CSV
+                df_loaded = pd.read_csv(file, sep=None, engine='python')
+            else:
+                # Menangani Excel
+                df_loaded = pd.read_excel(file)
+            
+            # --- PEMBERSIHAN OTOMATIS (DATA CLEANSING) ---
+            # Cari semua kolom yang harusnya angka tapi terbaca teks karena format Rp atau titik/koma
+            for col in df_loaded.columns:
+                if df_loaded[col].dtype == 'object':
+                    # Cek jika kolom mengandung karakter angka
+                    sample_val = str(df_loaded[col].dropna().iloc[0]) if not df_loaded[col].dropna().empty else ""
+                    if any(char.isdigit() for char in sample_val) and any(c in sample_val for c in [',', '.']):
+                        # Bersihkan simbol Rp, spasi, dan titik ribuan, lalu ubah koma jadi titik desimal
+                        df_loaded[col] = df_loaded[col].astype(str).str.replace(r'[Rp\s.]', '', regex=True).str.replace(',', '.')
+                        # Ubah ke numerik, jika gagal biarkan jadi NaN
+                        df_loaded[col] = pd.to_numeric(df_loaded[col], errors='coerce')
+            
+            return df_loaded
+        except Exception as e:
+            st.error(f"Error loading file: {e}")
+            return pd.DataFrame()
     else:
-        # Data dummy untuk demonstrasi awal (200 baris sesuai pondasi awal)
+        # Data dummy awal (tetap sesuai pondasi)
         data = {
             'Date': pd.date_range(start='2024-01-01', periods=200, freq='D'),
             'Vendor': np.random.choice(['Vendor X', 'Vendor Y', 'Vendor Z', 'Vendor K', 'Vendor L'], 200),
@@ -91,8 +111,6 @@ def load_data(file):
             'Description': 'Purchase Order'
         }
         return pd.DataFrame(data)
-
-df = load_data(uploaded_file)
 
 # --- 1. LOGIK DINAMIS & REAL-TIME ---
 
@@ -204,6 +222,7 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
 
 
