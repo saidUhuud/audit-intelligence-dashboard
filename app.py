@@ -24,7 +24,7 @@ with st.sidebar:
     st.markdown(f"""
         <div style='background-color: #e1f5fe; padding: 15px; border-radius: 10px; border-left: 5px solid #0288d1;'>
             <p style='margin: 0; font-weight: bold; color: #01579b;'>Developed by:</p>
-            <p style='margin: 0; font-size: 1.1em; font-weight: bold; color: #000;'>saidUhuud</p>
+            <p style='margin: 0; font-size: 1.1em; font-weight: bold; color: #000;'>Uhuud Said</p>
             <hr style='margin: 10px 0;'>
             <p style='margin: 0; font-size: 0.85em; color: #0277bd;'><b>Quantitative Developer</b></p>
             <p style='margin: 0; font-size: 0.85em; color: #0277bd;'><b>Statistical Consultant</b></p>
@@ -241,6 +241,7 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
 
 
