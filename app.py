@@ -171,7 +171,7 @@ with c2:
         names='Category',
         color='Category',
         color_discrete_map={'High':'#ef553b', 'Medium':'#fecb52', 'Low':'#00cc96'},
-        hole=0.3,5 # Membuatnya jadi Donut Chart agar lebih modern
+        hole=0.4 # Membuatnya jadi Donut Chart agar lebih modern
     )
     
     fig_pie.update_traces(textposition='inside', textinfo='percent+label')
@@ -204,6 +204,7 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
 
 
