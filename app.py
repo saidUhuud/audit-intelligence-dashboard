@@ -11,7 +11,7 @@ st.markdown("""
     <style>
     .main { background-color: #f5f7f9; }
     /* Memperkecil padding dan font size metrik agar muat satu baris */
-    [data-testid="stMetricValue"] { font-size: 1.8rem !important; }
+    [data-testid="stMetricValue"] { font-size: 1.4rem !important; }
     [data-testid="stMetricLabel"] { font-size: 0.9rem !important; }
     .stMetric { 
         background-color: #ffffff; 
@@ -263,5 +263,6 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
 
