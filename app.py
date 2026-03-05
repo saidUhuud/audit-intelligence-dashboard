@@ -213,21 +213,30 @@ with c2:
     fig_pie.update_layout(showlegend=False, margin=dict(t=0, b=0, l=0, r=0))
     st.plotly_chart(fig_pie, use_container_width=True)
 
-# Row 3: Investigation Table
+# Row 3: Investigation Table (Menampilkan Kategori Risiko)
 st.subheader("🚩 Anomaly Investigation List")
-# PERBAIKAN: Menampilkan seluruh kolom dari tabel anomali agar ID dan User terbaca utuh
-st.dataframe(anomalies.sort_values(by='Final_Score', ascending=False), use_container_width=True)
+# Menampilkan data yang sudah difilter berdasarkan slider secara real-time
+st.dataframe(
+    anomalies.sort_values(by='Final_Score', ascending=False), 
+    use_container_width=True
+)
 
-# --- 6. EXPORT FUNCTION ---
+# --- 6. EXPORT FUNCTION (Including Risk Category) ---
 def to_excel(df_export):
     output = BytesIO()
+    # Pastikan data diurutkan dari skor tertinggi sebelum di-export
+    df_sorted = df_export.sort_values(by='Final_Score', ascending=False)
+    
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df_export.to_excel(writer, index=False, sheet_name='Audit_Report')
+        df_sorted.to_excel(writer, index=False, sheet_name='Audit_Report')
         workbook  = writer.book
         worksheet = writer.sheets['Audit_Report']
+        
+        # Format header profesional
         header_fmt = workbook.add_format({'bold': True, 'fg_color': '#1F4E78', 'font_color': 'white', 'border': 1})
-        for col_num, value in enumerate(df_export.columns.values):
+        for col_num, value in enumerate(df_sorted.columns.values):
             worksheet.write(0, col_num, value, header_fmt)
+            
     return output.getvalue()
 
 if not anomalies.empty:
@@ -239,3 +248,4 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
