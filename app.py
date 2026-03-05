@@ -202,8 +202,10 @@ with col3:
     st.metric("Total Exposure (USD)", val_usd)
 
 with col4:
-    # Mengambil rata-rata Final_Score secara real-time
-    st.metric("Avg Risk Score", f"{df['Final_Score'].mean():,.1f}")
+    # PERBAIKAN: Avg Risk Score sekarang menghitung rata-rata anomali secara real-time
+    # Jika tidak ada anomali, tampilkan 0
+    current_avg_risk = anomalies['Final_Score'].mean() if not anomalies.empty else 0
+    st.metric("Avg Risk Score", f"{current_avg_risk:,.1f}")
     st.caption(f"Detected: **{'IDR' if is_rupiah else 'USD'} Mode**")
 
 st.divider()
@@ -261,4 +263,5 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
