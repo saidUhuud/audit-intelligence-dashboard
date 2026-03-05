@@ -98,7 +98,7 @@ with st.sidebar:
     risk_threshold = st.slider("Select Risk Threshold (%)", 0, 100, 70)
     st.caption("Transactions above this score will be flagged as High Risk.")
 
-# --- 3. DATA LOADING ENGINE ---
+# --- 3. DATA LOADING ENGINE (WITH 200 INITIAL DUMMY DATA) ---
 def load_data(file):
     if file is not None:
         try:
@@ -107,23 +107,30 @@ def load_data(file):
             else:
                 df_loaded = pd.read_excel(file)
             
+            # Auto-cleaning currency strings if any
             money_keywords = ['amount', 'nilai', 'total', 'harga', 'price', 'nominal']
             for col in df_loaded.columns:
                 is_money_col = any(key in col.lower() for key in money_keywords)
                 if is_money_col and df_loaded[col].dtype == 'object':
-                    sample_series = df_loaded[col].dropna()
-                    if not sample_series.empty:
-                        sample_val = str(sample_series.iloc[0])
-                        if any(char.isdigit() for char in sample_val):
-                            df_loaded[col] = df_loaded[col].astype(str).str.replace(r'[Rp\s.]', '', regex=True)
-                            df_loaded[col] = df_loaded[col].str.replace(',', '.')
-                            df_loaded[col] = pd.to_numeric(df_loaded[col], errors='coerce')
+                    df_loaded[col] = df_loaded[col].astype(str).str.replace(r'[Rp\s.]', '', regex=True).str.replace(',', '.')
+                    df_loaded[col] = pd.to_numeric(df_loaded[col], errors='coerce')
             return df_loaded
         except Exception as e:
             st.error(f"Error reading file: {e}")
             return pd.DataFrame()
     else:
-        return generate_large_sample("Dollar (USD)")
+        # DATA AWAL 200 BARIS (DIBANGKITKAN SAAT BELUM UPLOAD)
+        user_list = [f"User-0{i}" for i in range(1, 7)]
+        np.random.seed(42) # Agar data dummy konsisten
+        data = {
+            'Transaction_ID': [f"TRX-2024-{i:04d}" for i in range(1, 201)],
+            'Date': pd.date_range(start='2024-01-01', periods=200, freq='D'),
+            'User_ID': np.random.choice(user_list, 200),
+            'Vendor': np.random.choice(['Vendor X', 'Vendor Y', 'Vendor Z', 'Vendor K', 'Vendor L'], 200),
+            'Amount': np.random.uniform(1000, 50000, 200).round(2),
+            'Description': 'Initial Audit Sample'
+        }
+        return pd.DataFrame(data)
 
 df = load_data(uploaded_file)
 
@@ -230,3 +237,4 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
