@@ -129,7 +129,7 @@ def load_data(file):
 
 df = load_data(uploaded_file)
 
-# --- 4. ANALYTICS ENGINE (REAL-TIME) ---
+# --- 4. ANALYTICS ENGINE (REVISED REAL-TIME) ---
 if df is not None and isinstance(df, pd.DataFrame):
     if not df.empty:
         numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
@@ -146,13 +146,30 @@ if df is not None and isinstance(df, pd.DataFrame):
                 
             is_rupiah = df[target_col].mean() > 100000
 
-            # Risk Calculations
+            # 1. Basic Risk Calculations
             max_val = df[target_col].max() if df[target_col].max() > 0 else 1
             df['Risk_Score'] = (df[target_col] / max_val * 100).round(2)
             df['Is_Round'] = df[target_col].apply(lambda x: 1 if x % 100 == 0 else 0)
             df['Final_Score'] = (df['Risk_Score'] + (df['Is_Round'] * 20)).clip(0, 100)
             
+            # 2. Dynamic Risk Level Classification (Real-Time)
+            # Menggunakan logika bins yang sinkron dengan threshold slider
+            low_limit = 40
+            current_threshold = risk_threshold
+            
+            # Menentukan label dan rentang kategori
+            risk_bins = [0, low_limit, current_threshold, 100]
+            if current_threshold <= low_limit:
+                risk_bins = [0, current_threshold, (current_threshold + 100) / 2, 100]
+            
+            risk_labels = ['Low', 'Medium', 'Critical/High']
+            
+            # Menambahkan kolom Risk_Level ke dataframe utama
+            df['Risk_Level'] = pd.cut(df['Final_Score'], bins=risk_bins, labels=risk_labels, include_lowest=True)
+            
+            # 3. Filtering Anomalies (Data yang akan muncul di tabel & excel)
             anomalies = df[df['Final_Score'] >= risk_threshold].copy()
+            
         else:
             st.error("🚨 No numeric columns found!")
             st.stop()
@@ -248,4 +265,5 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
