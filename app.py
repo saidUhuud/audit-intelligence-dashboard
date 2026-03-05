@@ -4,13 +4,13 @@ import numpy as np
 import plotly.express as px
 from io import BytesIO
 
-# --- 1. CONFIGURATION ---
+# CONFIGURATION
 st.set_page_config(page_title="AUDIT INTELLIGENCE CORE SYSTEMS", layout="wide")
 
 st.markdown("""
     <style>
     .main { background-color: #f5f7f9; }
-    /* Memperkecil padding dan font size metrik agar muat satu baris */
+    /* re-size font */
     [data-testid="stMetricValue"] { font-size: 1.4rem !important; }
     [data-testid="stMetricLabel"] { font-size: 0.9rem !important; }
     .stMetric { 
@@ -22,7 +22,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. SIDEBAR (PROFESSIONAL IDENTITY & CONTROLS) ---
+# SIDEBAR
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/3201/3201521.png", width=100)
     st.title("Audit Control Panel")
@@ -32,7 +32,7 @@ with st.sidebar:
             <p style='margin: 0; font-weight: bold; color: #01579b;'>Developed by:</p>
             <p style='margin: 0; font-size: 1.1em; font-weight: bold; color: #000;'>Uhuud Said</p>
             <hr style='margin: 10px 0;'>
-            <p style='margin: 0; font-size: 0.85em; color: #0277bd;'><b>Quantitative Developer</b></p>
+            <p style='margin: 0; font-size: 0.85em; color: #0277bd;'><b>Quantitative Developer &</b></p>
             <p style='margin: 0; font-size: 0.85em; color: #0277bd;'><b>Statistical Consultant</b></p>
         </div>
     """, unsafe_allow_html=True)
@@ -98,7 +98,7 @@ with st.sidebar:
     risk_threshold = st.slider("Select Risk Threshold (%)", 0, 100, 70)
     st.caption("Transactions above this score will be flagged as High Risk.")
 
-# --- 3. DATA LOADING ENGINE (WITH 200 INITIAL DUMMY DATA) ---
+# DATA LOADING ENGINE
 def load_data(file):
     if file is not None:
         try:
@@ -119,9 +119,9 @@ def load_data(file):
             st.error(f"Error reading file: {e}")
             return pd.DataFrame()
     else:
-        # DATA AWAL 200 BARIS (DIBANGKITKAN SAAT BELUM UPLOAD)
+        # Dummy data
         user_list = [f"User-0{i}" for i in range(1, 7)]
-        np.random.seed(42) # Agar data dummy konsisten
+        np.random.seed(42) 
         data = {
             'Transaction_ID': [f"TRX-2024-{i:04d}" for i in range(1, 201)],
             'Date': pd.date_range(start='2024-01-01', periods=200, freq='D'),
@@ -134,7 +134,7 @@ def load_data(file):
 
 df = load_data(uploaded_file)
 
-# --- 4. ANALYTICS ENGINE (FIXED ERROR 0 & 100) ---
+# ANALYTICS ENGINE
 if df is not None and not df.empty:
     numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
     target_col = "Amount" 
@@ -153,16 +153,16 @@ if df is not None and not df.empty:
         df['Is_Round'] = df[target_col].apply(lambda x: 1 if x % 100 == 0 else 0)
         df['Final_Score'] = (df['Risk_Score'] + (df['Is_Round'] * 20)).clip(0, 100)
         
-        # FIX: Handling duplicate bins for Error 0 and 100
+        # Handling duplicate bins
         low_limit = 40
-        # Menggunakan sorted list set agar pembatas unik (mencegah layar merah)
+        # Use sorted list set
         risk_bins = sorted(list(set([0, low_limit, risk_threshold, 100])))
         risk_labels = ['Low', 'Medium', 'Critical']
         actual_labels = risk_labels[:len(risk_bins)-1]
         
         df['Risk_Level'] = pd.cut(df['Final_Score'], bins=risk_bins, labels=actual_labels, include_lowest=True)
         
-        # FIX: Sinkronisasi data anomali secara real-time
+        # Synchronization data anomaly real-time
         anomalies = df[df['Final_Score'] >= risk_threshold].copy()
     else:
         st.error("🚨 No numeric columns found!")
@@ -171,12 +171,17 @@ else:
     st.warning("⚠️ Data is empty!")
     st.stop()
 
-# --- 5. DASHBOARD UI ---
+# DASHBOARD UI
 st.title("🛡️ AUDIT INTELLIGENCE CORE SYSTEMS")
 st.markdown("Transforming raw transactions into actionable audit insights!")
-st.warning("👈 **MOBILE USERS: Open sidebar for upload and threshold settings**")
+st.markdown("""
+    <div style="background-color: #fff3cd; color: #856404; padding: 10px; border-radius: 5px; border: 1px solid #ffeeba; font-size: 0.85rem;">
+        👈 <b>MOBILE USERS:</b> Open sidebar for upload and threshold settings
+    </div>
+    <br>
+    """, unsafe_allow_html=True)
 
-# Row 1: Key Metrics
+# 1: Key Metrics
 col1, col2, col3, col4 = st.columns(4)
 col1.metric("Total Transactions", f"{len(df):,}")
 col2.metric("Detected Anomalies", f"{len(anomalies):,}", 
@@ -194,7 +199,7 @@ with col4:
 
 st.divider()
 
-# Row 2: Visualizations
+# 2: Visualizations
 c1, c2 = st.columns([6, 4])
 with c1:
     st.subheader("Transaction Risk Distribution")
@@ -212,7 +217,7 @@ with c2:
     fig_pie.update_layout(showlegend=False, margin=dict(t=0, b=0, l=0, r=0))
     st.plotly_chart(fig_pie, use_container_width=True)
 
-# Row 3: Investigation Table (FIXED: SEKARANG BERGERAK PRESISI)
+# 3: Investigation Table
 st.subheader("🚩 Anomaly Investigation List")
 st.dataframe(
     anomalies.sort_values(by='Final_Score', ascending=False), 
@@ -220,7 +225,7 @@ st.dataframe(
     hide_index=True
 )
 
-# --- 6. EXPORT FUNCTION ---
+# EXPORT FUNCTION
 def to_excel(df_export):
     output = BytesIO()
     df_sorted = df_export.sort_values(by='Final_Score', ascending=False)
@@ -237,4 +242,5 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
