@@ -10,7 +10,15 @@ st.set_page_config(page_title="AUDIT INTELLIGENCE CORE SYSTEMS", layout="wide")
 st.markdown("""
     <style>
     .main { background-color: #f5f7f9; }
-    .stMetric { background-color: #ffffff; padding: 15px; border-radius: 10px; box-shadow: 2px 2px 10px rgba(0,0,0,0.05); }
+    /* Memperkecil padding dan font size metrik agar muat satu baris */
+    [data-testid="stMetricValue"] { font-size: 1.8rem !important; }
+    [data-testid="stMetricLabel"] { font-size: 0.9rem !important; }
+    .stMetric { 
+        background-color: #ffffff; 
+        padding: 10px 15px !important; 
+        border-radius: 10px; 
+        box-shadow: 2px 2px 10px rgba(0,0,0,0.05);
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -253,3 +261,4 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
