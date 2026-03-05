@@ -9,36 +9,36 @@ st.set_page_config(page_title="AUDIT INTELLIGENCE CORE SYSTEMS", layout="wide")
 
 st.markdown("""
     <style>
-    /* Mengatur kontainer metrik agar terlihat seperti kartu profesional */
+    /* metric container */
     [data-testid="stMetric"] {
-        background-color: rgba(151, 166, 195, 0.1); /* Background tipis agar terlihat di mode terang */
-        border: 1px solid rgba(151, 166, 195, 0.2); /* Border halus */
+        background-color: rgba(151, 166, 195, 0.1); /* for light mode */
+        border: 1px solid rgba(151, 166, 195, 0.2);
         padding: 15px 20px;
         border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); /* Bayangan halus agar tidak terlihat "polosan" */
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         transition: transform 0.3s ease;
     }
 
-    /* Efek hover agar interaktif saat kursor mendekat */
+    /* hover effect */
     [data-testid="stMetric"]:hover {
         transform: translateY(-5px);
-        border-color: #ff4b4b; /* Warna aksen Streamlit saat di-hover */
+        border-color: #ff4b4b; /* hover effect color */
     }
 
-    /* Memastikan teks label metrik tetap kontras dan berwibawa */
+    /* contrast set */
     [data-testid="stMetricLabel"] p {
-        font-size: 14px !important; /* TAMBAHAN: Ubah ini untuk ukuran judul */
+        font-size: 16px !important;
         font-weight: 600 !important;
         color: #555e6d !important;
     }
 
-    /* Mengatur angka utama metrik agar lebih menonjol */
+    /* number metric set */
     [data-testid="stMetricValue"] div {
-        font-size: 1.8rem !important; /* TAMBAHAN: Ubah ini untuk ukuran angka agar tidak terpotong */
+        font-size: 1.8rem !important;
         font-weight: 700 !important;
     }
     
-    /* Adaptasi khusus untuk Mode Gelap agar tetap elegan */
+    /* for dark mode */
     @media (prefers-color-scheme: dark) {
         [data-testid="stMetric"] {
             background-color: rgba(255, 255, 255, 0.05);
@@ -271,6 +271,7 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
 
 
