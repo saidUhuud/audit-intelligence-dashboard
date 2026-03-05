@@ -9,21 +9,43 @@ st.set_page_config(page_title="AUDIT INTELLIGENCE CORE SYSTEMS", layout="wide")
 
 st.markdown("""
     <style>
-    /* Memaksa latar belakang kotak metrik agar transparan di mode gelap */
-    [data-testid="stMetricValue"], [data-testid="stMetric"] {
-        background-color: rgba(255, 255, 255, 0.05) !important;
+    /* Mengatur kontainer metrik agar terlihat seperti kartu profesional */
+    [data-testid="stMetric"] {
+        background-color: rgba(151, 166, 195, 0.1); /* Background tipis agar terlihat di mode terang */
+        border: 1px solid rgba(151, 166, 195, 0.2); /* Border halus */
+        padding: 15px 20px;
         border-radius: 10px;
-        padding: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); /* Bayangan halus agar tidak terlihat "polosan" */
+        transition: transform 0.3s ease;
     }
 
-    /* Memperbaiki warna teks metrik agar tetap terlihat di mode gelap */
-    [data-testid="stMetricLabel"] > div {
-        color: #ffffff !important;
+    /* Efek hover agar interaktif saat kursor mendekat */
+    [data-testid="stMetric"]:hover {
+        transform: translateY(-5px);
+        border-color: #ff4b4b; /* Warna aksen Streamlit saat di-hover */
+    }
+
+    /* Memastikan teks label metrik tetap kontras dan berwibawa */
+    [data-testid="stMetricLabel"] p {
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        color: #555e6d !important;
+    }
+
+    /* Mengatur angka utama metrik agar lebih menonjol */
+    [data-testid="stMetricValue"] div {
+        font-weight: 700 !important;
     }
     
-    /* Menghilangkan garis putih di sekeliling kotak jika ada */
-    [data-testid="metric-container"] {
-        border: none !important;
+    /* Adaptasi khusus untuk Mode Gelap agar tetap elegan */
+    @media (prefers-color-scheme: dark) {
+        [data-testid="stMetric"] {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        [data-testid="stMetricLabel"] p {
+            color: #d1d1d1 !important;
+        }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -248,6 +270,7 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
 
 
