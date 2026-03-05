@@ -191,13 +191,21 @@ with c2:
                      color='Category', color_discrete_map={'Critical':'#ef553b', 'Medium':'#fecb52', 'Low':'#00cc96'})
     st.plotly_chart(fig_pie, use_container_width=True)
 
-# Row 3: Investigation Table (SINKRON 100%)
+# --- 5. DASHBOARD UI (BAGIAN TABEL INVESTIGASI) ---
+
 st.subheader("🚩 Anomaly Investigation List")
-st.dataframe(
-    anomalies.sort_values(by='Final_Score', ascending=False), 
-    use_container_width=True,
-    hide_index=True
-)
+
+# Memastikan tabel mengambil data 'anomalies' yang baru saja dihitung di Analytics Engine
+if not anomalies.empty:
+    # Menggunakan container untuk memastikan UI refresh secara bersih
+    with st.container():
+        st.dataframe(
+            anomalies.sort_values(by='Final_Score', ascending=False), 
+            use_container_width=True,
+            hide_index=True
+        )
+else:
+    st.info(f"No transactions found with Risk Score above {risk_threshold}%. Try lowering the threshold.")
 
 # --- 6. EXPORT ---
 if not anomalies.empty:
@@ -210,3 +218,4 @@ if not anomalies.empty:
     st.download_button(label="📥 Download Audit Report", data=to_excel(anomalies), file_name="Audit_Report_saidUhuud.xlsx")
 
 st.sidebar.success("App Status: Ready for Audit")
+
