@@ -95,65 +95,91 @@ def load_data(file):
 df = load_data(uploaded_file)
 
 # --- AUDIT LOGIC ---
-df['Risk_Score'] = (df['Amount'] / df['Amount'].max() * 100).round(2)
-df['Is_Round'] = df['Amount'].apply(lambda x: 1 if x % 100 == 0 else 0)
+# --- 1. LOGIK DINAMIS & REAL-TIME ---
+
+# Deteksi kolom angka secara otomatis agar tidak error
+numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+target_col = "Amount" # default
+
+if numeric_cols:
+    for col in numeric_cols:
+        if any(x in col.lower() for x in ['amount', 'nilai', 'total', 'harga', 'price']):
+            target_col = col
+            break
+
+# PERHITUNGAN ULANG (Setiap kali slider risk_threshold digeser, bagian ini dihitung ulang)
+max_val = df[target_col].max() if df[target_col].max() > 0 else 1
+df['Risk_Score'] = (df[target_col] / max_val * 100).round(2)
+df['Is_Round'] = df[target_col].apply(lambda x: 1 if x % 100 == 0 else 0)
 df['Final_Score'] = (df['Risk_Score'] + (df['Is_Round'] * 20)).clip(0, 100)
 
-anomalies = df[df['Final_Score'] >= risk_threshold]
+# Filter Anomali (Sangat bergantung pada slider risk_threshold secara real-time)
+anomalies = df[df['Final_Score'] >= risk_threshold].copy()
 
-# --- DASHBOARD UI ---
+# --- 2. UPDATE UI DASHBOARD (REAL-TIME) ---
+
 st.title("🛡️ Audit Intelligence & Risk Dashboard")
 st.markdown("Transforming raw transactions into actionable audit insights.")
 st.warning("👈 **Mobile Users: Open the sidebar menu (arrow icon) to upload data and adjust threshold.**")
 
-# Row 1: Key Metrics
+# Row 1: Key Metrics (Ikut berubah saat slider digeser)
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("Total Transactions", len(df))
-col2.metric("Detected Anomalies", len(anomalies), delta=f"{len(anomalies)/len(df)*100:.1f}%", delta_color="inverse")
-col3.metric("Total Amount Analyzed", f"${df['Amount'].sum():,.0f}")
+col1.metric("Total Transactions", f"{len(df):,}")
+col2.metric("Detected Anomalies", f"{len(anomalies):,}", 
+           delta=f"{(len(anomalies)/len(df)*100):.1f}% dari total", delta_color="inverse")
+col3.metric("Total Exposure", f"${anomalies[target_col].sum():,.0f}")
 col4.metric("Avg Risk Score", f"{df['Final_Score'].mean():,.1f}")
 
 st.divider()
 
-# Row 2: Visualizations
+# Row 2: Visualizations (Bergerak secara Real-Time)
 c1, c2 = st.columns([6, 4])
 
 with c1:
     st.subheader("Transaction Risk Distribution")
-    fig = px.scatter(df, x="Date", y="Amount", color="Final_Score", 
-                     size="Amount", color_continuous_scale='RdYlGn_r',
+    # Menggunakan target_col agar fleksibel dengan file apa pun
+    fig = px.scatter(df, x=df.index, y=target_col, color="Final_Score", 
+                     size=target_col, color_continuous_scale='RdYlGn_r',
                      title="Visualizing Risks over Time")
+    # Tambahkan garis ambang batas (Threshold Line) agar visual lebih presisi
+    fig.add_hline(y=(risk_threshold/100)*max_val, line_dash="dash", line_color="red", annotation_text="Threshold")
     st.plotly_chart(fig, use_container_width=True)
 
 with c2:
     st.subheader("Risk Category Breakdown")
-    risk_counts = pd.cut(df['Final_Score'], bins=[0, 40, 70, 100], labels=['Low', 'Medium', 'High']).value_counts()
+    # Segmentasi ikut berubah real-time sesuai slider
+    # Kita buat bins dinamis: Low (0-40), Medium (40-Threshold), High (Threshold-100)
+    # Pastikan bins unik dengan menggunakan set/sorted jika perlu, atau gunakan threshold langsung
+    bins = [0, 40, risk_threshold if risk_threshold > 40 else 70, 100]
+    risk_counts = pd.cut(df['Final_Score'], bins=bins, labels=['Low', 'Medium', 'High'], include_lowest=True).value_counts()
+    
     fig_pie = px.pie(values=risk_counts.values, names=risk_counts.index, 
                      color=risk_counts.index, color_discrete_map={'High':'#ef553b', 'Medium':'#fecb52', 'Low':'#00cc96'})
     st.plotly_chart(fig_pie, use_container_width=True)
 
-# Row 3: Data Table
+# Row 3: Investigation Table (Berubah Real-Time)
 st.subheader("🚩 Anomaly Investigation List")
 st.dataframe(anomalies.sort_values(by='Final_Score', ascending=False), use_container_width=True)
 
-# --- EXPORT TO EXCEL ---
+# --- 3. EXPORT TO EXCEL ---
 def to_excel(df_export):
     output = BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         df_export.to_excel(writer, index=False, sheet_name='Audit_Report')
-        # Kerapian tambahan untuk hasil export
         workbook  = writer.book
         worksheet = writer.sheets['Audit_Report']
-        header_fmt = workbook.add_format({'bold': True, 'fg_color': '#1F4E78', 'font_color': 'white'})
+        header_fmt = workbook.add_format({'bold': True, 'fg_color': '#1F4E78', 'font_color': 'white', 'border': 1})
         for col_num, value in enumerate(df_export.columns.values):
             worksheet.write(0, col_num, value, header_fmt)
     return output.getvalue()
 
-st.download_button(
-    label="📥 Download Audit Report (Excel)",
-    data=to_excel(anomalies),
-    file_name="Audit_Anomaly_Report_saidUhuud.xlsx",
-    mime="application/vnd.ms-excel"
-)
+if not anomalies.empty:
+    st.download_button(
+        label="📥 Download Audit Report (Excel)",
+        data=to_excel(anomalies),
+        file_name="Audit_Anomaly_Report_saidUhuud.xlsx",
+        mime="application/vnd.ms-excel"
+    )
 
 st.sidebar.success("App Status: Ready for Audit")
+
