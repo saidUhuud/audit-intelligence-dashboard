@@ -27,13 +27,14 @@ st.markdown("""
 
     /* Memastikan teks label metrik tetap kontras dan berwibawa */
     [data-testid="stMetricLabel"] p {
-        font-size: 14px !important;
+        font-size: 14px !important; /* TAMBAHAN: Ubah ini untuk ukuran judul */
         font-weight: 600 !important;
         color: #555e6d !important;
     }
 
     /* Mengatur angka utama metrik agar lebih menonjol */
     [data-testid="stMetricValue"] div {
+        font-size: 1.8rem !important; /* TAMBAHAN: Ubah ini untuk ukuran angka agar tidak terpotong */
         font-weight: 700 !important;
     }
     
@@ -270,6 +271,7 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
 
 
