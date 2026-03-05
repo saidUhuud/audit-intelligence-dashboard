@@ -175,7 +175,7 @@ else:
 st.title("🛡️ AUDIT INTELLIGENCE CORE SYSTEMS")
 st.markdown("Transforming raw transactions into actionable audit insights!")
 st.markdown("""
-    <div style="background-color: #fff3cd; color: #856404; padding: 10px; border-radius: 5px; border: 1px solid #ffeeba; font-size: 0.77rem;">
+    <div style="background-color: #fff3cd; color: #856404; padding: 10px; border-radius: 5px; border: 1px solid #ffeeba; font-size: 0.80rem;">
         👈 <b>MOBILE USERS:</b> Open sidebar for upload and threshold settings
     </div>
     <br>
@@ -242,6 +242,7 @@ if not anomalies.empty:
     )
 
 st.sidebar.success("App Status: Ready for Audit")
+
 
 
 
