@@ -4,7 +4,7 @@ numpy
 plotly
 xlsxwriter
 openpyxl
-fpdf2
+fpdf
 kaleido
 sqlalchemy
 google-genai
