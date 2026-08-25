@@ -2400,7 +2400,8 @@ def generate_pdf(
     safe_text = str(ai_text or "").encode('latin-1', 'replace').decode('latin-1')
     pdf.multi_cell(0, 6, safe_text)
 
-    return pdf.output(dest='S').encode('latin-1')
+    out = pdf.output()
+    return bytes(out) if isinstance(out, (bytes, bytearray)) else str(out).encode('latin-1')
 
 #==========BUTTON EXPORT==========
 st.divider()
