@@ -2397,7 +2397,7 @@ def generate_pdf(
     pdf.set_font("Arial", "B", 12)
     pdf.cell(0, 10, "3. EXECUTIVE SUMMARY", ln=True)
     pdf.set_font("Arial", "", 10)
-    safe_text = ai_text.encode('latin-1', 'replace').decode('latin-1')
+    safe_text = str(ai_text or "").encode('latin-1', 'replace').decode('latin-1')
     pdf.multi_cell(0, 6, safe_text)
 
     return pdf.output(dest='S').encode('latin-1')
