@@ -2396,8 +2396,13 @@ def generate_pdf(
     pdf.add_page()
     pdf.set_font("Arial", "B", 12)
     pdf.cell(0, 10, "3. EXECUTIVE SUMMARY", ln=True)
-    pdf.set_font("Arial", "", 10)
-    safe_text = str(ai_text or "").encode('latin-1', 'replace').decode('latin-1')
+    pdf.set_font("Arial", "", 10)   
+    raw_text = str(ai_text) if ai_text is not None else ""
+    if raw_text.startswith("Figure(") or not raw_text.strip():
+        safe_text = "Executive summary analysis has not been generated yet. Please trigger 'Activate AI Analysis' in the dashboard."
+    else:
+        safe_text = raw_text.encode('latin-1', 'replace').decode('latin-1')
+    
     pdf.multi_cell(0, 6, safe_text)
 
     out = pdf.output()
