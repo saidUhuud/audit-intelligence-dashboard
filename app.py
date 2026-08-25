@@ -2353,9 +2353,16 @@ def generate_pdf(
 
     pdf.ln(6)
 
-    # --- INSIGHT 2: HOURLY ANOMALY & HIGH RISK TABLE ---
-    top_samples = df_export.sort_values(['Final_Score', 'Amount'], ascending=[False, False]).head(10)[['Date', 'Vendor', 'Amount', 'Final_Score']].to_dict(orient='records') if 'df_export' in locals() else []
-    
+    if 'df_export' in locals() and isinstance(df_export, pd.DataFrame) and not df_export.empty:
+        needed_cols = [c for c in ['Date', 'Vendor', 'Amount', 'Final_Score'] if c in df_export.columns]
+        sort_cols = [c for c in ['Final_Score', 'Amount'] if c in df_export.columns]
+        if sort_cols:
+            top_samples = df_export.sort_values(sort_cols, ascending=False).head(10)[needed_cols].to_dict(orient='records') if needed_cols else df_export.head(10).to_dict(orient='records')
+        else:
+            top_samples = df_export.head(10).to_dict(orient='records')
+    else:
+        top_samples = []
+
     prompt_table = f"""
     Berikan 1 kalimat Executive Audit Insight berdasarkan data transaksi berisiko tinggi ini:
     {top_samples}
